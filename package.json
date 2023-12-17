@@ -1,5 +1,5 @@
 {
-  "name": "com.imaginaryreactor.tps_module_for_unity",
+  "name": "com.imaginaryreactor.tpsmodule",
   "displayName": "TPS Module for Unity",
   "description": "This package provides Third Person Shooter module that uses the DOTS character controller package. So it depends on entity package. WIP",
 "version": "0.1.0-exp.2",
