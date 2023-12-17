@@ -1,0 +1,21 @@
+{
+  "name": "com.imaginaryreactor.tps-module-for-unity",
+  "displayName": "TPS Module for Unity",
+  "description": "This package provides Third Person Shooter module that uses the DOTS character controller package. So it depends on entity package. WIP",
+"version": "0.1.0-exp.2",
+  "unity": "2022.2",
+  "unityRelease": "15f1",
+  "dependencies": {
+    "com.unity.entities": "1.0.8",
+    "com.unity.physics": "1.0.8",
+    "com.unity.modules.uielements": "1.0.0",
+    "com.unity.modules.physics": "1.0.0"
+"com.unity.charactercontroller" : "1.0.0"
+  },
+  "keywords": [
+    "unity",
+    "tps",
+    "shooter",
+    "platformer"
+  ]
+}
