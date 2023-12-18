@@ -5,6 +5,7 @@ using UnityEngine;
 public class LaserPointerAuthoring : MonoBehaviour
 {
     public GameObject OwnerGO;
+    public bool isPlayer;
 
     public class Baker : Baker<LaserPointerAuthoring>
     {
@@ -12,7 +13,14 @@ public class LaserPointerAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic | TransformUsageFlags.WorldSpace);
 
-            AddComponent(entity, new LaserPointer(){Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic)});
+            if (authoring.isPlayer)
+            {
+                AddComponent(entity, new PlayerLaserPointer() { Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic) });
+            }
+            else
+            {
+                AddComponent(entity, new LaserPointer() { Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic) }); 
+            }
         }
     }
 

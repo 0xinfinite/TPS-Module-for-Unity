@@ -7,13 +7,19 @@ using Unity.Physics.Authoring;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class HitboxAttacher : MonoBehaviour
+public class CharacterConfigurator : MonoBehaviour
 {
     [SerializeField] private GameObject characterPrefab;
     [SerializeField] private Collider[] colliders;
 
     public void SettingHitboxes()
     {
+        if(characterPrefab == null)
+        {
+            Debug.LogWarning("You must assign Character Prefab to proceed configuration.");
+            return;
+        }
+
         GameObject newCharacter = Instantiate(characterPrefab, null); // = new GameObject("Third Person Character");
         newCharacter.transform.position = transform.position;
         newCharacter.transform.rotation = transform.rotation;
@@ -88,6 +94,7 @@ public class HitboxAttacher : MonoBehaviour
             
             var hitAuthoring = colObj.AddComponent<ComplexHitboxAuthoring>();
             hitAuthoring.ID = col.GetInstanceID();
+            hitAuthoring.OwnerGO = newCharacter;
 
             if (col.transform.gameObject.TryGetComponent<ColliderSyncObject>(out ColliderSyncObject syncObj))
             {
@@ -110,34 +117,39 @@ public class HitboxAttacher : MonoBehaviour
 
 
 
-        for (int i = 0; i < newCharacter.transform.childCount; i++)
+        if(ExtendedComponentGrabber.TryGetComponentFromChildren(newCharacter.transform, out OrbitCameraAuthoring orbitCam,
+            out Transform childTf))
         {
-            Transform child = newCharacter.transform.GetChild(i);
-
-
+            orbitCam.IgnoredEntities = newColliders;
+            orbitCam.IgnoredEntities.Add(newCharacter);
         }
     }
 
-    //private bool TryGetComponentFromChildren<T>(this Transform transform, out T component, out Transform selectedChild) 
-    //{
-    //    selectedChild = null;
-    //    for(int i = 0; i<transform.childCount; i++)
-    //    {
-    //        if(transform.GetChild(i).TryGetComponent<T>(out T childComponent))
-    //        {
-    //            component = childComponent;
-    //            selectedChild = transform.GetChild(i);
-    //            return true;
-    //        }
-    //    }
-    //    selectedChild = transform;
-    //    return transform.TryGetComponent(out component) && false;
-    //}
+
 
     private void OnEnable()
     {
         SettingHitboxes();
 
         this.enabled = false;
+    }
+}
+
+public static class ExtendedComponentGrabber
+{
+    public static bool TryGetComponentFromChildren<T>(Transform transform, out T component, out Transform selectedChild)
+    {
+        selectedChild = null;
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            if (transform.GetChild(i).TryGetComponent<T>(out T childComponent))
+            {
+                component = childComponent;
+                selectedChild = transform.GetChild(i);
+                return true;
+            }
+        }
+        selectedChild = transform;
+        return transform.TryGetComponent(out component) && false;
     }
 }

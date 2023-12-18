@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class HeadCamObject : MonoBehaviour
@@ -12,8 +13,13 @@ public class HeadCamObject : MonoBehaviour
         camera = GetComponent<Camera>();
     }
 
-    private void Start()
+    IEnumerator Start()
     {
+        while (!HeadCamObjectManager.instance)
+        {
+            yield return new WaitForEndOfFrame();
+        }
+
         if(id == -1)
         {
             HeadCamObjectManager.instance.headCamDict.Add(HeadCamObjectManager.instance.headCamDict.Count + 1, this);

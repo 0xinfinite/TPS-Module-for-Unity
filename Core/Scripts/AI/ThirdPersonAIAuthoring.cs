@@ -10,7 +10,8 @@ public class ThirdPersonAIAuthoring : MonoBehaviour
 {
     public GameObject ControlledCharacter;
     public GameObject ControlledCamera;
-    public Transform Target;
+    public Transform RallyPoint;
+    public Transform OverwatchPoint;
     //public GameObject CameraTarget;
     public Vector3 AimOffset;
     [Min(0.01f)]
@@ -20,8 +21,8 @@ public class ThirdPersonAIAuthoring : MonoBehaviour
     public float ReflexDelay = 0.5f;
     public float DistanceThresholdForPredict = 5;
     //public PhysicsMaterialProperties brainFilterAuthoring;
-    public PhysicsCategoryTags BelongsTo;
-    public PhysicsCategoryTags CollidesWith;
+    //public PhysicsCategoryTags BelongsTo;
+    //public PhysicsCategoryTags CollidesWith;
     public CustomPhysicsMaterialTags IFF_Key;
     
     //public GameObject ControlledWeapon;
@@ -47,13 +48,16 @@ public class ThirdPersonAIAuthoring : MonoBehaviour
             Owner = entity,
             TargetFoundElapsed = 9999,
             //TargetFound = false,
-            DesirePositionToMove = authoring.Target?authoring.Target.position:authoring.transform.position,
+            DesirePositionToMove = authoring.RallyPoint?authoring.RallyPoint.position:authoring.transform.position,
+            FinalDesirePositionToLook = authoring.OverwatchPoint?authoring.OverwatchPoint.position:
+            (authoring.RallyPoint? authoring.transform.position+(authoring.RallyPoint.position-authoring.transform.position).normalized*10f 
+            :authoring.transform.forward*10f),
                 AimOffset = authoring.AimOffset,
                 AimReflex = authoring.AimReflex,
                 AimPredictMultiplier = authoring.AimPredictMultiplier,
                 ReflexDelay = authoring.ReflexDelay,
                 DistanceThresholdForPredict = authoring.DistanceThresholdForPredict,
-                Filter = new CollisionFilter() { BelongsTo = authoring.BelongsTo.Value, CollidesWith = authoring.CollidesWith.Value },
+                //Filter = new CollisionFilter() { BelongsTo = authoring.BelongsTo.Value, CollidesWith = authoring.CollidesWith.Value },
                 ReceivedSignalInfo = new float4(0,0,0,-1),
                 IFF_Key = authoring.IFF_Key.Value,
             });
@@ -81,7 +85,7 @@ public struct Brain : IComponentData
     public float3 TargetRealVelocity;
     public float3 DesirePositionToMove;
     public float3 AimOffset;
-    public CollisionFilter Filter;
+    //public CollisionFilter Filter;
     public ColliderKey IFF_Key;
 }
 

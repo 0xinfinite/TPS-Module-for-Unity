@@ -23,21 +23,21 @@ public struct SeekerCastObstructionHitsCollector : ICollector<ColliderCastHit>
     private float _closestHitFraction;
     //private Entity _followedCharacter;
     private DynamicBuffer<IgnoreHitboxData> _ignoredEntitiesBuffer;
-    private ColliderKey _ownerKey;
+    private ColliderKey _targetKey;
     //[ReadOnly]
     private ComponentLookup<MagicIFF> _iffLookUp;
     public NativeArray<ColliderCastHit> Hits;
     //private int currentIndex;
 
     public SeekerCastObstructionHitsCollector(//Entity followedCharacter,
-        DynamicBuffer<IgnoreHitboxData> ignoredEntitiesBuffer, ColliderKey ownerKey, ComponentLookup<MagicIFF> iffLookUp, int capacity = 1)
+        DynamicBuffer<IgnoreHitboxData> ignoredEntitiesBuffer, ColliderKey targetKey, ComponentLookup<MagicIFF> iffLookUp, int capacity = 1)
     {
         NumHits = 0;
         ClosestHit = default;
         _closestHitFraction = float.MaxValue;
         //_followedCharacter = followedCharacter;
         _ignoredEntitiesBuffer = ignoredEntitiesBuffer;
-        _ownerKey= ownerKey;
+        _targetKey= targetKey;
         _iffLookUp = iffLookUp;
 
         Hits = new NativeArray<ColliderCastHit>(capacity, Allocator.Temp);
@@ -66,34 +66,34 @@ public struct SeekerCastObstructionHitsCollector : ICollector<ColliderCastHit>
         }
         if (_iffLookUp.HasComponent(hit.Entity))
         {
-        if (_iffLookUp[hit.Entity].Key//hit.Material.CustomTags 
-                == _ownerKey.Value)
-        {
-            return false;
-        }
-        }
+            if (_iffLookUp[hit.Entity].Key//hit.Material.CustomTags 
+                    == _targetKey.Value)
+            {
+                bool reachedEnd = NumHits + 1 >= Hits.Length;
+                // Process valid hit
+                if (hit.Fraction < _closestHitFraction)
+                {
+                    _closestHitFraction = hit.Fraction;
+                    ClosestHit = hit;
+                }
 
-        bool reachedEnd = NumHits + 1 >= Hits.Length;
-        // Process valid hit
-        if (hit.Fraction < _closestHitFraction)
-        {
-            _closestHitFraction = hit.Fraction;
-            ClosestHit = hit;
-        }
-
-        if (reachedEnd)
-        {
-            Hits[Hits.Length - 1] = ClosestHit;
-        }
-        else
-        {
-            Hits[NumHits] = hit;
-            //currentIndex++;
-            NumHits++;
-        }
+                if (reachedEnd)
+                {
+                    Hits[Hits.Length - 1] = ClosestHit;
+                }
+                else
+                {
+                    Hits[NumHits] = hit;
+                    //currentIndex++;
+                    NumHits++;
+                }
 
 
-        return true;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void Dispose()
@@ -301,7 +301,7 @@ public partial struct SeekerSystem : ISystem
             };
 
             var buffer = entityManager.GetBuffer<IgnoreHitboxData>(entity);
-            collector = new SeekerCastObstructionHitsCollector(buffer, seeker.SideKey, SystemAPI.GetComponentLookup<MagicIFF>(true) ,
+            collector = new SeekerCastObstructionHitsCollector(buffer, seeker.TargetSideKey, SystemAPI.GetComponentLookup<MagicIFF>(true) ,
                 8);
             if(physicsWorld.CastCollider(input, ref collector))
             {

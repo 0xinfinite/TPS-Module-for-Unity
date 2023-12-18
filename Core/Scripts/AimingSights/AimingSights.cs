@@ -21,6 +21,8 @@ public struct AimingSights : IComponentData
     public float3 MuzzleForward;
     [HideInInspector]
     public float3 LaserPointerPosition;
+
+
     //public float AimingSightsHeight;
 
     //[HideInInspector]
@@ -38,6 +40,7 @@ public struct AimingSights : IComponentData
 
 public struct PlayerLaserPointer : IComponentData
 {
+    public Entity Owner;
 }
 
 //[Serializable]

@@ -18,6 +18,7 @@ public struct Seeker : IComponentData
     public bool CheckRaycast;
     //public CollisionFilter ColliderFilter;
     public CollisionFilter RaycastFilter;
+    public ColliderKey TargetSideKey;
     public ColliderKey SideKey;
     public float3 SeekerOffset;
 }

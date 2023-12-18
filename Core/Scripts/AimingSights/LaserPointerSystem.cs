@@ -22,6 +22,15 @@ public partial struct LaserPointerSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
+        foreach(var (myLaser, transform ) in SystemAPI.Query<PlayerLaserPointer, RefRW<LocalTransform>>())
+        {
+            if(SystemAPI.HasComponent<AimingSights>(myLaser.Owner))
+            {
+                var sights = SystemAPI.GetComponent<AimingSights>(myLaser.Owner);
+                transform.ValueRW.Position = sights.LaserPointerPosition;
+            }
+        }
+
         state.Dependency =
                           new LaserPointerJob()
                           {

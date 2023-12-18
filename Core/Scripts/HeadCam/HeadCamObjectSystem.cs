@@ -43,7 +43,15 @@ public partial class HeadCamObjectSystem: SystemBase
 
         foreach (var (headCam, ltw )in SystemAPI.Query<HeadCam, LocalToWorld>())
         {
-            HeadCamObjectManager.instance.headCamDict[headCam.ID].transform.SetPositionAndRotation(ltw.Position, ltw.Rotation);
+
+
+            if (!HeadCamObjectManager.instance || !HeadCamObjectManager.instance.headCamDict.ContainsKey(headCam.ID))
+                continue;
+
+            if (headCam.ID >= 0)
+            {
+                HeadCamObjectManager.instance.headCamDict[headCam.ID].transform.SetPositionAndRotation(ltw.Position, ltw.Rotation); 
+            }
         }
 
         //HeadCamJob job = new HeadCamJob()

@@ -25,10 +25,10 @@ public class NoticeUIManager: MonoBehaviour
     public Canvas canvas;
     Camera mainCam;
     private List<HitDirectionInfo> hitDirectionInfoList;
-    public float infoShowDuration;
-    public float maxForceFactor = 100;
-    public float liftAngle = 30;
-    public Vector2 posOffset;
+    public float infoShowDuration = 3;
+    public float maxForceFactor = 200;
+    public float liftAngle = 7.5f;
+    public Vector2 posOffset = new Vector2(0,-0.2f);
 
     // Start is called before the first frame update
     void Awake()

@@ -10,7 +10,7 @@ public class HeadCamAuthoring : MonoBehaviour
     public GameObject targetCharacter;
     public GameObject targetOrbitCamera;
     public Vector3 headCamOffset;
-    public int id;
+    public int id = -1;
 
     //public HeadCam HeadCam = HeadCam.GetDefault();
 

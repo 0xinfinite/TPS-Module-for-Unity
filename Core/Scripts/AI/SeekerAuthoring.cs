@@ -21,6 +21,7 @@ public class SeekerAuthoring : MonoBehaviour
     public PhysicsCategoryTags RaycastFilterBelongsTo;
     public PhysicsCategoryTags RaycastFilterCollidesWith;
     public CustomPhysicsMaterialTags sideTag;
+    public CustomPhysicsMaterialTags targetSideTag;
     public float3 SeekerOffset;
     public bool GetDirection;
     public GameObject[] SeekerIgnoreGOList;
@@ -41,6 +42,7 @@ public class SeekerAuthoring : MonoBehaviour
                 //ColliderFilter = new CollisionFilter() { BelongsTo = authoring.ColliderFilterBelongsTo.Value, CollidesWith = authoring.ColliderFilterCollidesWith.Value },
                 RaycastFilter = new CollisionFilter() { BelongsTo = authoring.RaycastFilterBelongsTo.Value, CollidesWith = authoring.RaycastFilterCollidesWith.Value },
                 SeekerOffset = authoring.SeekerOffset,
+                TargetSideKey = authoring.targetSideTag.Value,
                 SideKey = authoring.sideTag.Value,
                 LastKnownVector = new float3(-100,-100,-100),
                 GetDirection = authoring.GetDirection,

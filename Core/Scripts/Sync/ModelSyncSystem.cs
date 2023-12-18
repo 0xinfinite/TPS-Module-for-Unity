@@ -33,6 +33,9 @@ public partial class ModelSyncSystem : SystemBase
             
             foreach (var (mc, ltw, entity) in SystemAPI.Query<ModelSyncComponent, LocalToWorld>().WithEntityAccess())
             {
+                if (!manager.modelDict.ContainsKey(mc.ID))
+                    continue;
+
                 manager.SetPosition(mc.ID, ltw.Position);
 
                 var isValuting = SystemAPI.HasComponent<Vaulting>(entity);

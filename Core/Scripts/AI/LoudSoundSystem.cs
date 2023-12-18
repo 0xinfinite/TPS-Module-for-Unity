@@ -27,12 +27,12 @@ public partial struct LoudSoundSystem : ISystem
 
         foreach (var (sound, tag ) in SystemAPI.Query<RefRW< LoudSound>, PlayerTag>().WithAll<LoudSound, PlayerTag>())
         {
-            float NextTickTime = (sound.ValueRW.ElapsedTime + DeltaTime);
+            float NextTickTime = (sound.ValueRO.ElapsedTime + DeltaTime);
 
             foreach (var (brain, ltw, entity) in SystemAPI.Query<Brain, LocalToWorld>().WithEntityAccess())
             {
-                float distance = math.length(ltw.Position - sound.ValueRW.Source);
-                if (distance < sound.ValueRW.Range && distance > sound.ValueRW.ElapsedTime * SpeedOfSound && distance < NextTickTime* SpeedOfSound)
+                float distance = math.length(ltw.Position - sound.ValueRO.Source);
+                if (distance < sound.ValueRO.Range && distance > sound.ValueRO.ElapsedTime * SpeedOfSound && distance < NextTickTime* SpeedOfSound)
                 {
                     _ecb.AddComponent(entity, new HeardSound() { SoundSource = sound.ValueRO.Source, Recognized = false, playerSide = true });
                 }
