@@ -4,30 +4,33 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
-[Serializable]
-public struct HeadCam : IComponentData
+namespace ImaginaryReactor
 {
-    public Entity FollowedCharacterEntity;
-    public Entity FollowedCameraEntity;
-    public float3 HeadCamOffset;
-    public int ID;
-
-    [HideInInspector]
-    public float3 PlanarForward;
-
-    public static HeadCam GetDefault()
+    [Serializable]
+    public struct HeadCam : IComponentData
     {
-        HeadCam c = new HeadCam
-        {
-            
-        };
-        return c;
-    }
-}
+        public Entity FollowedCharacterEntity;
+        public Entity FollowedCameraEntity;
+        public float3 HeadCamOffset;
+        public int ID;
 
-//[Serializable]
-//public struct HeadCamControl : IComponentData
-//{
-//    public Entity FollowedCharacterEntity;
-//    public Entity FollowedCameraEntity;
-//}
+        [HideInInspector]
+        public float3 PlanarForward;
+
+        public static HeadCam GetDefault()
+        {
+            HeadCam c = new HeadCam
+            {
+
+            };
+            return c;
+        }
+    }
+
+    //[Serializable]
+    //public struct HeadCamControl : IComponentData
+    //{
+    //    public Entity FollowedCharacterEntity;
+    //    public Entity FollowedCameraEntity;
+    //}
+}

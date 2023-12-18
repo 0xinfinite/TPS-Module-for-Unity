@@ -2,28 +2,31 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Physics;
 
-[DisallowMultipleComponent]
-public class ThirdPersonPlayerAuthoring : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public GameObject ControlledCharacter;
-    public GameObject ControlledCamera;
-    //public GameObject ControlledWeapon;
-    //public bool DestroyWeapon;
-
-    public class Baker : Baker<ThirdPersonPlayerAuthoring>
+    [DisallowMultipleComponent]
+    public class ThirdPersonPlayerAuthoring : MonoBehaviour
     {
-        public override void Bake(ThirdPersonPlayerAuthoring authoring)
+        public GameObject ControlledCharacter;
+        public GameObject ControlledCamera;
+        //public GameObject ControlledWeapon;
+        //public bool DestroyWeapon;
+
+        public class Baker : Baker<ThirdPersonPlayerAuthoring>
         {
-            Entity entity = GetEntity(TransformUsageFlags.None);
-            AddComponent(entity, new ThirdPersonPlayer
+            public override void Bake(ThirdPersonPlayerAuthoring authoring)
             {
-                ControlledCharacter = GetEntity(authoring.ControlledCharacter, TransformUsageFlags.Dynamic),
-                ControlledCamera = GetEntity(authoring.ControlledCamera, TransformUsageFlags.Dynamic),
-                //InitWeapon = GetEntity(authoring.ControlledWeapon, TransformUsageFlags.Dynamic),
-            });
-            AddComponent(entity, new ThirdPersonPlayerInputs());
-            AddComponent(entity, new PlayerTag() );
-            
+                Entity entity = GetEntity(TransformUsageFlags.None);
+                AddComponent(entity, new ThirdPersonPlayer
+                {
+                    ControlledCharacter = GetEntity(authoring.ControlledCharacter, TransformUsageFlags.Dynamic),
+                    ControlledCamera = GetEntity(authoring.ControlledCamera, TransformUsageFlags.Dynamic),
+                    //InitWeapon = GetEntity(authoring.ControlledWeapon, TransformUsageFlags.Dynamic),
+                });
+                AddComponent(entity, new ThirdPersonPlayerInputs());
+                AddComponent(entity, new PlayerTag());
+
+            }
         }
     }
 }

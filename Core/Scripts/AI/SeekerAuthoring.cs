@@ -6,7 +6,8 @@ using UnityEngine;
 using Unity.Physics;
 using Unity.Mathematics;
 
-public class SeekerAuthoring : MonoBehaviour
+namespace ImaginaryReactor { 
+    public class SeekerAuthoring : MonoBehaviour
 {
     public GameObject BrainGO;
     public Transform Parent;
@@ -72,4 +73,5 @@ public class SeekerAuthoring : MonoBehaviour
             //AddComponent(entity, new Neural() { BrainEntity = GetEntity(authoring.BrainGO, TransformUsageFlags.Dynamic) });
         }
     }
+}
 }

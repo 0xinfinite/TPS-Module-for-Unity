@@ -4,23 +4,26 @@ using Unity.Physics;
 using Unity.Physics.Authoring;
 using UnityEngine;
 
-public class MagicIFF_Authoring : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public CustomPhysicsMaterialTags Key;
-
-    public class Baker : Baker<MagicIFF_Authoring>
+    public class MagicIFF_Authoring : MonoBehaviour
     {
-        public override void Bake(MagicIFF_Authoring authoring)
+        public CustomPhysicsMaterialTags Key;
+
+        public class Baker : Baker<MagicIFF_Authoring>
         {
-            Entity entity = GetEntity(TransformUsageFlags.Dynamic | TransformUsageFlags.WorldSpace);
+            public override void Bake(MagicIFF_Authoring authoring)
+            {
+                Entity entity = GetEntity(TransformUsageFlags.Dynamic | TransformUsageFlags.WorldSpace);
 
-            AddComponent(entity, new MagicIFF() { Key = authoring.Key.Value });
+                AddComponent(entity, new MagicIFF() { Key = authoring.Key.Value });
+            }
         }
-    }
-     
-}
 
-public struct MagicIFF : IComponentData
-{
-    public ColliderKey Key;
+    }
+
+    public struct MagicIFF : IComponentData
+    {
+        public ColliderKey Key;
+    }
 }

@@ -2,8 +2,11 @@
 using System;
 using Unity.Entities;
 
-[Serializable]
-public struct Dissolvable : IComponentData
+namespace ImaginaryReactor
 {
-    public float RemainTime;
+    [Serializable]
+    public struct Dissolvable : IComponentData
+    {
+        public float RemainTime;
+    }
 }

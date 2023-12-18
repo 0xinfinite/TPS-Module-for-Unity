@@ -5,9 +5,11 @@ using Unity.Mathematics;
 using Unity.Transforms;
 
 
-[BurstCompile]
-[UpdateInGroup(typeof(InitializationSystemGroup))]
-public partial struct ThirdPersonAIInputsSystem : ISystem
+namespace ImaginaryReactor {
+
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [BurstCompile]
+    public partial  struct ThirdPersonAIInputsSystem : ISystem
 {
     [BurstCompile]
     public static void GetActualPositionOfHitbox(ref LocalToWorld ltw, ref Hitbox hitbox, ref float3 pos)
@@ -169,14 +171,14 @@ public partial struct ThirdPersonAIInputsSystem : ISystem
     }
 }
 
-//public partial struct TrackingJob : IJobEntity
+//namespace ImaginaryReactor { public partial  struct TrackingJob : IJobEntity
 //{
     
 //}
 
 
 [BurstCompile]
-public partial struct DesireJob : IJobEntity
+public partial  struct DesireJob : IJobEntity
 {
     [ReadOnly] public ComponentLookup<LocalToWorld> LocalToWorldLookup;
     [ReadOnly] public ComponentLookup<ThirdPersonCharacterComponent> CCLookup;
@@ -237,7 +239,7 @@ public partial struct DesireJob : IJobEntity
     }
 }
 
-//public partial struct BrainCleanJob : IJobEntity
+//namespace ImaginaryReactor { public partial  struct BrainCleanJob : IJobEntity
 //{
 //    public EntityCommandBuffer ecb;
 
@@ -293,7 +295,7 @@ public partial struct ThirdPersonAIVariableStepControlSystem : ISystem
 ///// </summary>
 //[UpdateInGroup(typeof(FixedStepSimulationSystemGroup), OrderFirst = true)]
 //[BurstCompile]
-//public partial struct ThirdPersonAIFixedStepControlSystem : ISystem
+//namespace ImaginaryReactor { public partial  struct ThirdPersonAIFixedStepControlSystem : ISystem
 //{
 //    [BurstCompile]
 //    public void OnCreate(ref SystemState state)
@@ -371,3 +373,4 @@ public partial struct ThirdPersonAIVariableStepControlSystem : ISystem
        
 //    }
 //}
+}

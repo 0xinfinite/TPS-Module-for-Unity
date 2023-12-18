@@ -17,5 +17,10 @@
     "tps",
     "shooter",
     "platformer"
-  ]
+  ],
+"author":{
+	"name": "Kang Ju Seong",
+"email": "imaginaryreactor@gmail.com",
+"url": "https://github.com/0xinfinite/"
+}
 }

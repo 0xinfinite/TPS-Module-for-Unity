@@ -6,46 +6,49 @@ using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
 
-[Serializable]
-public struct AimingSights : IComponentData
+namespace ImaginaryReactor
 {
-    public Entity MuzzleEntity;
-    public Entity FollowedCameraEntity;
-    public Entity LaserPointEntity;
-    //public Entity WeaponEntity;
-    public CollisionFilter RayFilter;
-
-    [HideInInspector]
-    public float3 MuzzlePosition;
-    [HideInInspector]
-    public float3 MuzzleForward;
-    [HideInInspector]
-    public float3 LaserPointerPosition;
-
-
-    //public float AimingSightsHeight;
-
-    //[HideInInspector]
-    //public float3 PlanarForward;
-
-    public static AimingSights GetDefault()
+    [Serializable]
+    public struct AimingSights : IComponentData
     {
-        AimingSights c = new AimingSights
+        public Entity MuzzleEntity;
+        public Entity FollowedCameraEntity;
+        public Entity LaserPointEntity;
+        //public Entity WeaponEntity;
+        public CollisionFilter RayFilter;
+
+        [HideInInspector]
+        public float3 MuzzlePosition;
+        [HideInInspector]
+        public float3 MuzzleForward;
+        [HideInInspector]
+        public float3 LaserPointerPosition;
+
+
+        //public float AimingSightsHeight;
+
+        //[HideInInspector]
+        //public float3 PlanarForward;
+
+        public static AimingSights GetDefault()
         {
-            
-        };
-        return c;
+            AimingSights c = new AimingSights
+            {
+
+            };
+            return c;
+        }
     }
-}
 
-public struct PlayerLaserPointer : IComponentData
-{
-    public Entity Owner;
-}
+    public struct PlayerLaserPointer : IComponentData
+    {
+        public Entity Owner;
+    }
 
-//[Serializable]
-//public struct AimingSightsControl : IComponentData
-//{
-//    public Entity FollowedCharacterEntity;
-//    public Entity FollowedCameraEntity;
-//}
+    //[Serializable]
+    //public struct AimingSightsControl : IComponentData
+    //{
+    //    public Entity FollowedCharacterEntity;
+    //    public Entity FollowedCameraEntity;
+    //}
+}

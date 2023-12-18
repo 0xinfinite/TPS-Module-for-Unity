@@ -1,19 +1,23 @@
 using Unity.Entities;
 using UnityEngine;
 
-public class ModelSyncAuthoring : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public int ID;
-
-    public class Baker : Baker<ModelSyncAuthoring>
+    public class ModelSyncAuthoring : MonoBehaviour
     {
-        public override void Bake(ModelSyncAuthoring authoring)
-        {
-            Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+        public int ID;
 
-            AddComponent(entity, new ModelSyncComponent() { 
-            ID = authoring.ID,
-            });
+        public class Baker : Baker<ModelSyncAuthoring>
+        {
+            public override void Bake(ModelSyncAuthoring authoring)
+            {
+                Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+
+                AddComponent(entity, new ModelSyncComponent()
+                {
+                    ID = authoring.ID,
+                });
+            }
         }
     }
 }

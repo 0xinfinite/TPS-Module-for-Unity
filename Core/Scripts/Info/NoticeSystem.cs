@@ -3,18 +3,21 @@ using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
 
-public partial class NoticeSystem : SystemBase
+namespace ImaginaryReactor
 {
-
-    protected override void OnUpdate()
+    public partial class NoticeSystem : SystemBase
     {
-        if(NoticeUIManager.instance != null)
+
+        protected override void OnUpdate()
         {
-         
-            foreach (var (hitInfo, tag) in SystemAPI.Query<TrackInfo, PlayerTag>().WithAll<TrackInfo, PlayerTag>())
+            if (NoticeUIManager.instance != null)
             {
-         
-                NoticeUIManager.instance.ShowHitVector(hitInfo.LastKnownVector, hitInfo.DamageAmount);
+
+                foreach (var (hitInfo, tag) in SystemAPI.Query<TrackInfo, PlayerTag>().WithAll<TrackInfo, PlayerTag>())
+                {
+
+                    NoticeUIManager.instance.ShowHitVector(hitInfo.LastKnownVector, hitInfo.DamageAmount);
+                }
             }
         }
     }

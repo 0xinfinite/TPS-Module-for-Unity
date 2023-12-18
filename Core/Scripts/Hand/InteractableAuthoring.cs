@@ -3,7 +3,7 @@
 //using Unity.Entities;
 //using UnityEngine;
 
-//public class InteractableAuthoring : MonoBehaviour
+//namespace ImaginaryReactor { public partial  InteractableAuthoring : MonoBehaviour
 //{
 //    public class Baker : Baker<InteractableAuthoring>
 //    {

@@ -1,32 +1,35 @@
 using System.Collections;
 using UnityEngine;
 
-public class HeadCamObject : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public static Transform Target;
-    public Camera camera;
-    public int id = -1;
-
-    private void Awake()
+    public class HeadCamObject : MonoBehaviour
     {
-        Target = this.transform; 
-        camera = GetComponent<Camera>();
-    }
+        public static Transform Target;
+        public Camera camera;
+        public int id = -1;
 
-    IEnumerator Start()
-    {
-        while (!HeadCamObjectManager.instance)
+        private void Awake()
         {
-            yield return new WaitForEndOfFrame();
+            Target = this.transform;
+            camera = GetComponent<Camera>();
         }
 
-        if(id == -1)
+        IEnumerator Start()
         {
-            HeadCamObjectManager.instance.headCamDict.Add(HeadCamObjectManager.instance.headCamDict.Count + 1, this);
-        }
-        else
-        {
-            HeadCamObjectManager.instance.headCamDict.Add(id, this);
+            while (!HeadCamObjectManager.instance)
+            {
+                yield return new WaitForEndOfFrame();
+            }
+
+            if (id == -1)
+            {
+                HeadCamObjectManager.instance.headCamDict.Add(HeadCamObjectManager.instance.headCamDict.Count + 1, this);
+            }
+            else
+            {
+                HeadCamObjectManager.instance.headCamDict.Add(id, this);
+            }
         }
     }
 }

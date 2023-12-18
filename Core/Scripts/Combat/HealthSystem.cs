@@ -4,9 +4,10 @@ using static UnityEngine.EventSystems.EventTrigger;
 using Unity.CharacterController;
 using Unity.Physics;
 
+namespace ImaginaryReactor { 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateAfter(typeof(EnergySystem))]
-public partial struct HealthSystem : ISystem
+    public partial  struct HealthSystem : ISystem
 {
     //public EntityCommandBuffer _ecb;
 
@@ -68,76 +69,77 @@ public partial struct HealthSystem : ISystem
     [BurstCompile]
     [WithAll(typeof(Simulate))]
     public partial struct AliveJob : IJobEntity
-    {
-        //public float DeltaTime;
-        //public PhysicsWorld PhysicsWorld;
-        public EntityCommandBuffer ecb;
-        //public EntityManager entityManager;
-
-        void Execute(
-            Entity entity,
-            //ref ThirdPersonCharacterControl cc,
-            in Health health//,
-                             //in WeaponControl cameraControl,
-                             //in DynamicBuffer<WeaponIgnoredEntityBufferElement> ignoredEntitiesBuffer
-            )
         {
-            if (health.RemainHealth <= 0)
+            //public float DeltaTime;
+            //public PhysicsWorld PhysicsWorld;
+            public EntityCommandBuffer ecb;
+            //public EntityManager entityManager;
+
+            void Execute(
+                Entity entity,
+                //ref ThirdPersonCharacterControl cc,
+                in Health health//,
+                                //in WeaponControl cameraControl,
+                                //in DynamicBuffer<WeaponIgnoredEntityBufferElement> ignoredEntitiesBuffer
+                )
             {
-                //foreach(var hitbox in SystemAPI.Query<Hitbox>().WithAll<Hitbox>())
-                //{
+                if (health.RemainHealth <= 0)
+                {
+                    //foreach(var hitbox in SystemAPI.Query<Hitbox>().WithAll<Hitbox>())
+                    //{
 
-                //}
+                    //}
 
-                //UnityEngine.Debug.Log("I'm dead");
-                //ecb.RemoveComponent<ThirdPersonCharacterControl>(entity);
-                ecb.RemoveComponent<PlayerTag>(entity);
-                //ecb.RemoveComponent<CharacterInterpolation>(entity);
-                //ecb.RemoveComponent<KinematicCharacterBody>(entity);
-                //ecb.RemoveComponent<KinematicCharacterDeferredImpulse>(entity);
-                //ecb.RemoveComponent<KinematicCharacterHit>(entity);
-                //ecb.RemoveComponent<KinematicCharacterProperties>(entity);
-                //ecb.RemoveComponent<KinematicVelocityProjectionHit>(entity);
-                //ecb.RemoveComponent<StatefulKinematicCharacterHit>(entity);
-                //ecb.RemoveComponent<StoredKinematicCharacterData>(entity);
-                //ecb.RemoveComponent<ThirdPersonCharacterComponent>(entity);
-                //ecb.RemoveComponent<PhysicsCollider>(entity);
+                    //UnityEngine.Debug.Log("I'm dead");
+                    //ecb.RemoveComponent<ThirdPersonCharacterControl>(entity);
+                    ecb.RemoveComponent<PlayerTag>(entity);
+                    //ecb.RemoveComponent<CharacterInterpolation>(entity);
+                    //ecb.RemoveComponent<KinematicCharacterBody>(entity);
+                    //ecb.RemoveComponent<KinematicCharacterDeferredImpulse>(entity);
+                    //ecb.RemoveComponent<KinematicCharacterHit>(entity);
+                    //ecb.RemoveComponent<KinematicCharacterProperties>(entity);
+                    //ecb.RemoveComponent<KinematicVelocityProjectionHit>(entity);
+                    //ecb.RemoveComponent<StatefulKinematicCharacterHit>(entity);
+                    //ecb.RemoveComponent<StoredKinematicCharacterData>(entity);
+                    //ecb.RemoveComponent<ThirdPersonCharacterComponent>(entity);
+                    //ecb.RemoveComponent<PhysicsCollider>(entity);
 
 
-                //var buffer = entityManager.GetBuffer<IncludedHitbox>(entity);
-                //for(int i = buffer.Length-1; i>=0; --i)
-                //{
-                //    ecb.RemoveComponent<PhysicsCollider>(buffer[i].HitboxEntity);
-                //}
-                //foreach(var Hitbox in )
-                ecb.RemoveComponent<Health>(entity);
+                    //var buffer = entityManager.GetBuffer<IncludedHitbox>(entity);
+                    //for(int i = buffer.Length-1; i>=0; --i)
+                    //{
+                    //    ecb.RemoveComponent<PhysicsCollider>(buffer[i].HitboxEntity);
+                    //}
+                    //foreach(var Hitbox in )
+                    ecb.RemoveComponent<Health>(entity);
+                }
             }
         }
-    }
 
-    [BurstCompile]
-    [WithAll(typeof(Simulate))]
-    public partial struct HitboxRemoveJob : IJobEntity
-    {
-        //public float DeltaTime;
-        //public PhysicsWorld PhysicsWorld;
-        public ComponentLookup<Health> HealthLookUp;
-        public EntityCommandBuffer ecb;
-
-        void Execute(
-            Entity entity,
-            //ref ThirdPersonCharacterControl cc,
-            in Hitbox hitbox//,
-                            //in WeaponControl cameraControl,
-                            //in DynamicBuffer<WeaponIgnoredEntityBufferElement> ignoredEntitiesBuffer
-            )
-        {
-            if(!HealthLookUp.TryGetComponent(hitbox.Owner, out Health health))
+        [BurstCompile]
+        [WithAll(typeof(Simulate))]
+         public partial struct HitboxRemoveJob : IJobEntity
             {
-                ecb.RemoveComponent<PhysicsCollider>(entity);
+                //public float DeltaTime;
+                //public PhysicsWorld PhysicsWorld;
+                public ComponentLookup<Health> HealthLookUp;
+                public EntityCommandBuffer ecb;
+
+                void Execute(
+                    Entity entity,
+                    //ref ThirdPersonCharacterControl cc,
+                    in Hitbox hitbox//,
+                                    //in WeaponControl cameraControl,
+                                    //in DynamicBuffer<WeaponIgnoredEntityBufferElement> ignoredEntitiesBuffer
+                    )
+                {
+                    if (!HealthLookUp.TryGetComponent(hitbox.Owner, out Health health))
+                    {
+                        ecb.RemoveComponent<PhysicsCollider>(entity);
+                    }
+                }
             }
         }
+
+
     }
-}
-
-

@@ -1,13 +1,16 @@
 using UnityEngine;
 
-public class CrosshairObject : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public static Transform Target;
-
-    // Start is called before the first frame update
-    void Awake()
+    public class CrosshairObject : MonoBehaviour
     {
-        Target = this.transform;
-    }
+        public static Transform Target;
 
+        // Start is called before the first frame update
+        void Awake()
+        {
+            Target = this.transform;
+        }
+
+    }
 }

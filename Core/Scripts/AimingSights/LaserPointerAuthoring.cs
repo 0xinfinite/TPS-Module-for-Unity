@@ -2,26 +2,29 @@
 using Unity.Entities;
 using UnityEngine;
 
-public class LaserPointerAuthoring : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public GameObject OwnerGO;
-    public bool isPlayer;
-
-    public class Baker : Baker<LaserPointerAuthoring>
+    public class LaserPointerAuthoring : MonoBehaviour
     {
-        public override void Bake(LaserPointerAuthoring authoring)
-        {
-            Entity entity = GetEntity(TransformUsageFlags.Dynamic | TransformUsageFlags.WorldSpace);
+        public GameObject OwnerGO;
+        public bool isPlayer;
 
-            if (authoring.isPlayer)
+        public class Baker : Baker<LaserPointerAuthoring>
+        {
+            public override void Bake(LaserPointerAuthoring authoring)
             {
-                AddComponent(entity, new PlayerLaserPointer() { Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic) });
-            }
-            else
-            {
-                AddComponent(entity, new LaserPointer() { Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic) }); 
+                Entity entity = GetEntity(TransformUsageFlags.Dynamic | TransformUsageFlags.WorldSpace);
+
+                if (authoring.isPlayer)
+                {
+                    AddComponent(entity, new PlayerLaserPointer() { Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic) });
+                }
+                else
+                {
+                    AddComponent(entity, new LaserPointer() { Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic) });
+                }
             }
         }
-    }
 
+    }
 }

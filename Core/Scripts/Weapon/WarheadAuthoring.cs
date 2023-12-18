@@ -4,30 +4,32 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[DisallowMultipleComponent]
-public class WarheadAuthoring : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public GameObject fragment;
-    public GameObject impactParticle;
-    public BulletType damageType;
-    public HitscanType hitscanType;
-    public float hitscanRange;
-    public float sphereRadius;
-    public float rigidbodyPushForce = 100f;
-    public int fragmentCount = 1;
-    public float fragmentSpread = 0;
-    public float fragmentDamage = 0;
-
-    public class Baker : Baker<WarheadAuthoring>
+    [DisallowMultipleComponent]
+    public class WarheadAuthoring : MonoBehaviour
     {
-        public override void Bake(WarheadAuthoring authoring)
-        {
-            Entity entity = GetEntity(TransformUsageFlags.Dynamic | TransformUsageFlags.WorldSpace);
+        public GameObject fragment;
+        public GameObject impactParticle;
+        public BulletType damageType;
+        public HitscanType hitscanType;
+        public float hitscanRange;
+        public float sphereRadius;
+        public float rigidbodyPushForce = 100f;
+        public int fragmentCount = 1;
+        public float fragmentSpread = 0;
+        public float fragmentDamage = 0;
 
-            AddComponent(entity, //authoring.HeadCam);
-                new Warhead()
-                {
-                    
+        public class Baker : Baker<WarheadAuthoring>
+        {
+            public override void Bake(WarheadAuthoring authoring)
+            {
+                Entity entity = GetEntity(TransformUsageFlags.Dynamic | TransformUsageFlags.WorldSpace);
+
+                AddComponent(entity, //authoring.HeadCam);
+                    new Warhead()
+                    {
+
                         DamageType = authoring.damageType,
                         Fragment = GetEntity(authoring.fragment, TransformUsageFlags.Dynamic),
                         ImpactParticle = GetEntity(authoring.impactParticle, TransformUsageFlags.Dynamic),
@@ -36,8 +38,9 @@ public class WarheadAuthoring : MonoBehaviour
                         FragmentSpread = authoring.fragmentSpread,
                         FragmentDamage = authoring.fragmentDamage,
                         //FragmentCount
-                    
-                });
+
+                    });
+            }
         }
     }
 }

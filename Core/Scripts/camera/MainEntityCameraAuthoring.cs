@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Entities;
 
-[DisallowMultipleComponent]
-public class MainEntityCameraAuthoring : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public class Baker : Baker<MainEntityCameraAuthoring>
+    [DisallowMultipleComponent]
+    public class MainEntityCameraAuthoring : MonoBehaviour
     {
-        public override void Bake(MainEntityCameraAuthoring authoring)
+        public class Baker : Baker<MainEntityCameraAuthoring>
         {
-            Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponent<MainEntityCamera>(entity);
+            public override void Bake(MainEntityCameraAuthoring authoring)
+            {
+                Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+                AddComponent<MainEntityCamera>(entity);
+            }
         }
     }
 }

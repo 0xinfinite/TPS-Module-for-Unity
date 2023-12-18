@@ -5,55 +5,56 @@ using Unity.Burst;
 using Unity.Physics;
 using Unity.Transforms;
 
-public partial struct DissolvableSystem : ISystem
-{
-    [BurstCompile]
-    public void OnCreate(ref SystemState state)
+namespace ImaginaryReactor { public partial struct DissolvableSystem : ISystem
     {
-        state.RequireForUpdate<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>();
-        state.RequireForUpdate(SystemAPI.QueryBuilder().WithAll<Dissolvable>().Build());
-
-    }
-
-    public void OnDestroy(ref SystemState state)
-    {
-    }
-
-    //[ReadOnly] ComponentLookup<AimingSights> sightsLookup;
-
-    [BurstCompile]
-    public void OnUpdate(ref SystemState state)
-    {
-        //var ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-
-        DissolveJob job = new DissolveJob()
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
         {
-            DeltaTime = SystemAPI.Time.DeltaTime,
-            ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged)
-        };
+            state.RequireForUpdate<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>();
+            state.RequireForUpdate(SystemAPI.QueryBuilder().WithAll<Dissolvable>().Build());
 
-        state.Dependency = job.Schedule(state.Dependency);
-    }
+        }
 
-
-
-    [BurstCompile]
-    //[WithAll(typeof(Simulate))]
-    public partial struct DissolveJob : IJobEntity
-    {
-        public float DeltaTime;
-        public EntityCommandBuffer ecb;
-
-        void Execute(
-            Entity entity,
-            ref Dissolvable dissolvable
-            )
+        public void OnDestroy(ref SystemState state)
         {
-            dissolvable.RemainTime -= DeltaTime;
+        }
 
-            if (dissolvable.RemainTime < 0)
+        //[ReadOnly] ComponentLookup<AimingSights> sightsLookup;
+
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            //var ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+
+            DissolveJob job = new DissolveJob()
             {
-                ecb.DestroyEntity(entity); 
+                DeltaTime = SystemAPI.Time.DeltaTime,
+                ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged)
+            };
+
+            state.Dependency = job.Schedule(state.Dependency);
+        }
+
+
+
+        [BurstCompile]
+    //[WithAll(typeof(Simulate))]
+     public partial struct DissolveJob : IJobEntity
+        {
+            public float DeltaTime;
+            public EntityCommandBuffer ecb;
+
+            void Execute(
+                Entity entity,
+                ref Dissolvable dissolvable
+                )
+            {
+                dissolvable.RemainTime -= DeltaTime;
+
+                if (dissolvable.RemainTime < 0)
+                {
+                    ecb.DestroyEntity(entity);
+                }
             }
         }
     }

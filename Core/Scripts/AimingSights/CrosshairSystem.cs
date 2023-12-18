@@ -6,16 +6,19 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(PresentationSystemGroup))]
-public partial class CrosshairSystem : SystemBase
+namespace ImaginaryReactor
 {
-    protected override void OnUpdate()
+    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    public partial class CrosshairSystem : SystemBase
     {
-        if (CrosshairObject.Target != null && SystemAPI.HasSingleton<PlayerLaserPointer>())
+        protected override void OnUpdate()
         {
-            Entity playerLaserPointerEntity = SystemAPI.GetSingletonEntity<PlayerLaserPointer>();
-            LocalToWorld targetLocalToWorld = SystemAPI.GetComponent<LocalToWorld>(playerLaserPointerEntity);
-            CrosshairObject.Target.transform.SetPositionAndRotation(Camera.main.WorldToScreenPoint(targetLocalToWorld.Position), Quaternion.identity);
+            if (CrosshairObject.Target != null && SystemAPI.HasSingleton<PlayerLaserPointer>())
+            {
+                Entity playerLaserPointerEntity = SystemAPI.GetSingletonEntity<PlayerLaserPointer>();
+                LocalToWorld targetLocalToWorld = SystemAPI.GetComponent<LocalToWorld>(playerLaserPointerEntity);
+                CrosshairObject.Target.transform.SetPositionAndRotation(Camera.main.WorldToScreenPoint(targetLocalToWorld.Position), Quaternion.identity);
+            }
         }
     }
 }

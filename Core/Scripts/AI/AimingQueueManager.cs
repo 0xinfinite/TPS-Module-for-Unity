@@ -3,7 +3,9 @@ using UnityEngine;
 using Unity.Mathematics;
 using Unity.Entities;
 
-public class AimingQueueManager : MonoBehaviour
+
+namespace ImaginaryReactor { 
+    public class AimingQueueManager : MonoBehaviour
 {
     public static AimingQueueManager instance;
     // Start is called before the first frame update
@@ -67,4 +69,5 @@ public class AimingQueueManager : MonoBehaviour
 
         return queue[id].TryPeek(out result) ? result : new float3(-100, -100, -100);
     }
+}
 }

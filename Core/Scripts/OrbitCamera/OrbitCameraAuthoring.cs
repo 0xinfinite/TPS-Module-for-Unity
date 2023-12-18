@@ -4,8 +4,8 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[DisallowMultipleComponent]
-public class OrbitCameraAuthoring : MonoBehaviour
+namespace ImaginaryReactor {
+[DisallowMultipleComponent] public class OrbitCameraAuthoring : MonoBehaviour
 {
     public List<GameObject> IgnoredEntities = new List<GameObject>();
     public OrbitCamera OrbitCamera = OrbitCamera.GetDefault();
@@ -33,4 +33,5 @@ public class OrbitCameraAuthoring : MonoBehaviour
             }
         }
     }
+}
 }

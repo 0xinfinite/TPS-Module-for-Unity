@@ -4,37 +4,35 @@ using Unity.Entities;
 using Unity.Physics.Authoring;
 using UnityEngine;
 
-public class ComplexHitboxAuthoring : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public GameObject OwnerGO;
-    public CustomPhysicsMaterialTags IFF_Key;
-    public int ID;
-
-    public class Baker : Baker<ComplexHitboxAuthoring>
+    public class ComplexHitboxAuthoring : MonoBehaviour
     {
+        public GameObject OwnerGO;
+        public CustomPhysicsMaterialTags IFF_Key;
+        public int ID;
 
-        public override void Bake(ComplexHitboxAuthoring authoring) 
+        public class Baker : Baker<ComplexHitboxAuthoring>
         {
 
-            Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponent(entity, new Hitbox()
+            public override void Bake(ComplexHitboxAuthoring authoring)
             {
-                Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic),
-                Center = HitboxAuthoring.GetCenter(authoring.transform),
-                IFF_Key = authoring.IFF_Key.Value
-                //BoundSize = boundSize
-            });
-            AddComponent(entity, new ColliderSyncComponent()
-            {
-                ID = authoring.ID,
-                Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic)
-            });
+
+                Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+                AddComponent(entity, new Hitbox()
+                {
+                    Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic),
+                    Center = HitboxAuthoring.GetCenter(authoring.transform),
+                    IFF_Key = authoring.IFF_Key.Value
+                    //BoundSize = boundSize
+                });
+                //AddComponent(entity, new ColliderSyncComponent()
+                //{
+                //    ID = authoring.ID,
+                //    Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic)
+                //});
+            }
         }
     }
-}
 
-public struct ColliderSyncComponent : IComponentData
-{
-    public int ID;
-    public Entity Owner;
 }

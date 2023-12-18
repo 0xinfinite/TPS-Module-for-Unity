@@ -1,9 +1,11 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-
-public struct RootMotionComponent : IComponentData
+namespace ImaginaryReactor
 {
-    public float3 Velocity;
+    public struct RootMotionComponent : IComponentData
+    {
+        public float3 Velocity;
 
+    }
 }

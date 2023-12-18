@@ -5,16 +5,19 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-[UpdateInGroup(typeof(PresentationSystemGroup))]
-public partial class MainCameraSystem : SystemBase
+namespace ImaginaryReactor
 {
-    protected override void OnUpdate()
+    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    public partial class MainCameraSystem : SystemBase
     {
-        if (MainGameObjectCamera.Instance != null && SystemAPI.HasSingleton<MainEntityCamera>())
+        protected override void OnUpdate()
         {
-            Entity mainEntityCameraEntity = SystemAPI.GetSingletonEntity<MainEntityCamera>();
-            LocalToWorld targetLocalToWorld = SystemAPI.GetComponent<LocalToWorld>(mainEntityCameraEntity);
-            MainGameObjectCamera.Instance.transform.SetPositionAndRotation(targetLocalToWorld.Position, targetLocalToWorld.Rotation);
+            if (MainGameObjectCamera.Instance != null && SystemAPI.HasSingleton<MainEntityCamera>())
+            {
+                Entity mainEntityCameraEntity = SystemAPI.GetSingletonEntity<MainEntityCamera>();
+                LocalToWorld targetLocalToWorld = SystemAPI.GetComponent<LocalToWorld>(mainEntityCameraEntity);
+                MainGameObjectCamera.Instance.transform.SetPositionAndRotation(targetLocalToWorld.Position, targetLocalToWorld.Rotation);
+            }
         }
     }
 }

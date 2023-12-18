@@ -6,6 +6,7 @@
 //using UnityEngine;
 
 //[DisallowMultipleComponent]
+//namespace ImaginaryReactor {
 //public class AimingSightsAuthoring : MonoBehaviour
 //{
 //    public GameObject muzzle;
@@ -38,4 +39,5 @@
             
 //        }
 //    }
+//}
 //}

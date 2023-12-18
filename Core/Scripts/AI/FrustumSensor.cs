@@ -13,7 +13,7 @@
 
 
 //[BurstCompile]
-//public partial struct FrustumSensingJob : IJobParallelFor
+//namespace ImaginaryReactor { public partial  struct FrustumSensingJob : IJobParallelFor
 //{
 //    //PhysicsWorld PhysicsWorld;
 //    [ReadOnly]
@@ -51,7 +51,7 @@
 //}
 
 //[BurstCompile]
-//public partial struct VerticesTransformPointJob : IJobParallelFor
+//namespace ImaginaryReactor { public partial  struct VerticesTransformPointJob : IJobParallelFor
 //{
 //    [ReadOnly]
 //    public float4x4 localToWorldMatrices;
@@ -64,7 +64,7 @@
 //    }
 //}
 
-//public class FrustumSensor : MonoBehaviour
+//namespace ImaginaryReactor { public partial  FrustumSensor : MonoBehaviour
 //{
 //    [SerializeField] private Camera sensorCamera;
 
@@ -167,7 +167,7 @@
 //    }
 //}
 
-////public class FrustumSensingManager : MonoBehaviour
+////namespace ImaginaryReactor { public partial  FrustumSensingManager : MonoBehaviour
 ////{
 ////    //PhysicsWorld PhysicsWorld;
 

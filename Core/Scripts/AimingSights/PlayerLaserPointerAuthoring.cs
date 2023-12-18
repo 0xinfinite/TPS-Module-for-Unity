@@ -2,16 +2,19 @@
 using Unity.Entities;
 using UnityEngine;
 
-public class PlayerLaserPointerAuthoring : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public class Baker : Baker<PlayerLaserPointerAuthoring>
+    public class PlayerLaserPointerAuthoring : MonoBehaviour
     {
-        public override void Bake(PlayerLaserPointerAuthoring authoring)
+        public class Baker : Baker<PlayerLaserPointerAuthoring>
         {
-            Entity entity = GetEntity(TransformUsageFlags.Dynamic | TransformUsageFlags.WorldSpace);
+            public override void Bake(PlayerLaserPointerAuthoring authoring)
+            {
+                Entity entity = GetEntity(TransformUsageFlags.Dynamic | TransformUsageFlags.WorldSpace);
 
-            AddComponent(entity, new PlayerLaserPointer(){});
+                AddComponent(entity, new PlayerLaserPointer() { });
+            }
         }
-    }
 
+    }
 }

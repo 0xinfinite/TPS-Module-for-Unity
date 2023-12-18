@@ -3,104 +3,108 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class ModelSyncManager : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public static ModelSyncManager instance;
-
-    public Dictionary<int, ModelSyncObject> modelDict;
-
-    public Queue<int> clearBodyQueue;
-
-    public void SetPosition(int id, float3 _position)
+    public class ModelSyncManager : MonoBehaviour
     {
-        if (modelDict.ContainsKey(id))
-        {
-            modelDict[id].transform.position = _position;
-        }
-    }
-    public void SetRotation(int id, quaternion _rotation)
-    {
-        if (modelDict.ContainsKey(id))
-        {
-            modelDict[id].transform.rotation = _rotation;
-        }
-    }
+        public static ModelSyncManager instance;
 
-    public void SetBool(int id, string paramName, bool value) {
-        if (modelDict.ContainsKey(id) )
-        {
-            if (modelDict[id].animator)
-            { modelDict[id].animator.SetBool(paramName, value); }
-        }
-    }
-    public void SetTrigger(int id, string paramName)
-    {
-        if (modelDict.ContainsKey(id))
-        {
-            if (modelDict[id].animator)
-            { modelDict[id].animator.SetTrigger(paramName); }
-        }
-    }
+        public Dictionary<int, ModelSyncObject> modelDict;
 
-    public void SetFloat(int id, string paramName, float value)
-    {
-        if (modelDict.ContainsKey(id) )
-        {
-            if (modelDict[id].animator)
-            { modelDict[id].animator.SetFloat(paramName, value); }
-        }
-    }
+        public Queue<int> clearBodyQueue;
 
-
-    public void PushLine(int id, float3 startPos, float3 endPos)
-    {
-        if (modelDict.ContainsKey(id))
+        public void SetPosition(int id, float3 _position)
         {
-            modelDict[id].transform.GetComponent<ISync>().Line( startPos, endPos);
-        }
-    }
-
-    public void AddModel(int id, ModelSyncObject obj)
-    {
-        if (modelDict.ContainsKey(id))
-        {
-            if (modelDict[id] != obj)
+            if (modelDict.ContainsKey(id))
             {
-                modelDict[id] = obj;
+                modelDict[id].transform.position = _position;
             }
         }
-        else
+        public void SetRotation(int id, quaternion _rotation)
         {
-            modelDict.Add(id, obj);
-        }
-    }
-
-    public void RemoveModel(int id, ModelSyncObject obj)
-    {
-        if (modelDict.ContainsKey(id))
-        {
-            if (modelDict[id] == obj)
+            if (modelDict.ContainsKey(id))
             {
-                modelDict.Remove(id);
+                modelDict[id].transform.rotation = _rotation;
             }
         }
-    }
 
-    public void ClearingCharacterBody(int id)
-    {
-        clearBodyQueue.Enqueue(id);
-    }
-
-    private void Awake()
-    {
-        if (instance == null)
-        { instance = this; }
-        else
+        public void SetBool(int id, string paramName, bool value)
         {
-            Destroy(gameObject);
+            if (modelDict.ContainsKey(id))
+            {
+                if (modelDict[id].animator)
+                { modelDict[id].animator.SetBool(paramName, value); }
+            }
         }
-        clearBodyQueue = new Queue<int>();
-        modelDict = new Dictionary<int, ModelSyncObject>(); 
-    }
+        public void SetTrigger(int id, string paramName)
+        {
+            if (modelDict.ContainsKey(id))
+            {
+                if (modelDict[id].animator)
+                { modelDict[id].animator.SetTrigger(paramName); }
+            }
+        }
 
+        public void SetFloat(int id, string paramName, float value)
+        {
+            if (modelDict.ContainsKey(id))
+            {
+                if (modelDict[id].animator)
+                { modelDict[id].animator.SetFloat(paramName, value); }
+            }
+        }
+
+
+        public void PushLine(int id, float3 startPos, float3 endPos)
+        {
+            if (modelDict.ContainsKey(id))
+            {
+                modelDict[id].transform.GetComponent<ISync>().Line(startPos, endPos);
+            }
+        }
+
+        public void AddModel(int id, ModelSyncObject obj)
+        {
+            if (modelDict.ContainsKey(id))
+            {
+                if (modelDict[id] != obj)
+                {
+                    modelDict[id] = obj;
+                }
+            }
+            else
+            {
+                modelDict.Add(id, obj);
+            }
+        }
+
+        public void RemoveModel(int id, ModelSyncObject obj)
+        {
+            if (modelDict.ContainsKey(id))
+            {
+                if (modelDict[id] == obj)
+                {
+                    modelDict.Remove(id);
+                }
+            }
+        }
+
+        public void ClearingCharacterBody(int id)
+        {
+            clearBodyQueue.Enqueue(id);
+        }
+
+        private void Awake()
+        {
+            if (instance == null)
+            { instance = this; }
+            else
+            {
+                Destroy(gameObject);
+            }
+            clearBodyQueue = new Queue<int>();
+            modelDict = new Dictionary<int, ModelSyncObject>();
+        }
+
+    }
 }

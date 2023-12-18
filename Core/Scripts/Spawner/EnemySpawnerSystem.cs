@@ -6,55 +6,58 @@ using Unity.Mathematics;
 using UnityEngine;
 
 //[UpdateInGroup(typeof(InitializationSystemGroup))]
-public partial class EnemySpawnerSystem : SystemBase
+namespace ImaginaryReactor
 {
-    protected override void OnCreate()
+    public partial class EnemySpawnerSystem : SystemBase
     {
-        
-    }
-
-    protected override void OnUpdate()
-    {
-        if (EnemySpawnerManager.instance)
+        protected override void OnCreate()
         {
-            var manager = EnemySpawnerManager.instance;
 
-            if (manager.spawnNow)
+        }
+
+        protected override void OnUpdate()
+        {
+            if (EnemySpawnerManager.instance)
             {
-                var ecb = SystemAPI.GetSingleton<EndFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(World.Unmanaged);
+                var manager = EnemySpawnerManager.instance;
 
-                foreach (var spawner in SystemAPI.Query<EnemySpawner>())//.WithAll<EnemySpawner>())
+                if (manager.spawnNow)
                 {
-                    if(spawner.ID == manager.targetID)
+                    var ecb = SystemAPI.GetSingleton<EndFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(World.Unmanaged);
+
+                    foreach (var spawner in SystemAPI.Query<EnemySpawner>())//.WithAll<EnemySpawner>())
                     {
-                        var characterEntity = ecb.Instantiate(spawner.CharacterEnity);
-                        ecb.SetComponent(characterEntity, new LocalTransform() { Position = manager.transform.position, Rotation = manager.transform.rotation, Scale = 1 });
+                        if (spawner.ID == manager.targetID)
+                        {
+                            var characterEntity = ecb.Instantiate(spawner.CharacterEnity);
+                            ecb.SetComponent(characterEntity, new LocalTransform() { Position = manager.transform.position, Rotation = manager.transform.rotation, Scale = 1 });
 
 
 
-                        //new LocalToWorld() { Value = float4x4.TRS(manager.transform.position, manager.transform.rotation, new float3(1,1,1)) });
+                            //new LocalToWorld() { Value = float4x4.TRS(manager.transform.position, manager.transform.rotation, new float3(1,1,1)) });
 
-                        //var hitboxEntity = ecb.Instantiate(spawner.HitboxEntity);
-                        //ecb.AddComponent(hitboxEntity, new Hitbox()
-                        //{
-                        //    Owner = characterEntity,//GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic),
-                        //    //BoundSize = boundSize
-                        //});
-                        ////if (authoring.parent != null)
-                        //{
-                        //    ecb.AddComponent(hitboxEntity, new SeperatedChild()
-                        //    {
-                        //        Parent = characterEntity,//GetEntity(authoring.parent, TransformUsageFlags.Dynamic),
-                        //        LocalPosition = authoring.parent.InverseTransformPoint(authoring.transform.position),
-                        //        LocalForward = authoring.parent.InverseTransformDirection(authoring.transform.forward),
-                        //        LocalUp = authoring.parent.InverseTransformDirection(authoring.transform.up),
-                        //        LocalRotation = Quaternion.LookRotation(authoring.parent.InverseTransformDirection(authoring.transform.forward), authoring.parent.InverseTransformDirection(authoring.transform.up))
-                        //    });
-                        //}
+                            //var hitboxEntity = ecb.Instantiate(spawner.HitboxEntity);
+                            //ecb.AddComponent(hitboxEntity, new Hitbox()
+                            //{
+                            //    Owner = characterEntity,//GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic),
+                            //    //BoundSize = boundSize
+                            //});
+                            ////if (authoring.parent != null)
+                            //{
+                            //    ecb.AddComponent(hitboxEntity, new SeperatedChild()
+                            //    {
+                            //        Parent = characterEntity,//GetEntity(authoring.parent, TransformUsageFlags.Dynamic),
+                            //        LocalPosition = authoring.parent.InverseTransformPoint(authoring.transform.position),
+                            //        LocalForward = authoring.parent.InverseTransformDirection(authoring.transform.forward),
+                            //        LocalUp = authoring.parent.InverseTransformDirection(authoring.transform.up),
+                            //        LocalRotation = Quaternion.LookRotation(authoring.parent.InverseTransformDirection(authoring.transform.forward), authoring.parent.InverseTransformDirection(authoring.transform.up))
+                            //    });
+                            //}
+                        }
                     }
-                }
 
-                manager.spawnNow = false;
+                    manager.spawnNow = false;
+                }
             }
         }
     }

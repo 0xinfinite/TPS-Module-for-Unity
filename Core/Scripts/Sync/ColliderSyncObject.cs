@@ -2,28 +2,31 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ColliderSyncObject : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public int ID;
-    //public Collider collider;
-
-    // Start is called before the first frame update
-    IEnumerator Start()
+    public class ColliderSyncObject : MonoBehaviour
     {
-        while (!ColliderSyncManager.instance)
+        public int ID;
+        //public Collider collider;
+
+        // Start is called before the first frame update
+        IEnumerator Start()
         {
-            yield return new WaitForEndOfFrame();
+            while (!ColliderSyncManager.instance)
+            {
+                yield return new WaitForEndOfFrame();
+            }
+            ColliderSyncManager.instance.AddCollider(ID, this);
         }
-        ColliderSyncManager.instance.AddCollider(ID, this);
-    }
 
-    private void OnDestroy()
-    {
-        if (ColliderSyncManager.instance)
+        private void OnDestroy()
         {
-            ColliderSyncManager.instance.RemoveCollider(ID, this);
+            if (ColliderSyncManager.instance)
+            {
+                ColliderSyncManager.instance.RemoveCollider(ID, this);
+            }
         }
+
+
     }
-
-
 }

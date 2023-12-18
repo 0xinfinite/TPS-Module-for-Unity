@@ -2,14 +2,17 @@
 using Unity.Entities;
 using UnityEngine;
 
-public class PlayerTagAuthoring : MonoBehaviour
+namespace ImaginaryReactor
 {
-    public class Baker : Baker<PlayerTagAuthoring>
+    public class PlayerTagAuthoring : MonoBehaviour
     {
-        public override void Bake(PlayerTagAuthoring authoring)
+        public class Baker : Baker<PlayerTagAuthoring>
         {
-            Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponent(entity, new PlayerTag());
+            public override void Bake(PlayerTagAuthoring authoring)
+            {
+                Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+                AddComponent(entity, new PlayerTag());
+            }
         }
     }
 }

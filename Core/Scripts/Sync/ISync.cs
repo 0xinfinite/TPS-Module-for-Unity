@@ -1,7 +1,9 @@
 
 using Unity.Mathematics;
-
-public interface ISync
+namespace ImaginaryReactor
 {
-    public void Line(float3 startPos, float3 endPos);
+    public interface ISync
+    {
+        public void Line(float3 startPos, float3 endPos);
+    }
 }
