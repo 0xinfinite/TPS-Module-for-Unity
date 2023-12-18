@@ -31,13 +31,32 @@ namespace ImaginaryReactor
             {
                 var col = colliders[i];
 
-                GameObject colObj = new GameObject(col.name);
+                GameObject colObj;
+                bool colliderAuthoringExist = false;
+                if (ExtendedChildGrabber.TryGetSameNameTransformFromChildren(newCharacter.transform, col.gameObject.name, out Transform selectedChild))
+                {
+                    colObj = selectedChild.gameObject;
+                    colliderAuthoringExist = true;
+                }
+                else
+                {
+                    colObj = new GameObject(col.name);
+                }
                 newColliders.Add(colObj);
                 colObj.transform.parent = newCharacter.transform;
                 colObj.transform.position = col.transform.position;
                 colObj.transform.rotation = col.transform.rotation;
                 colObj.transform.localScale = col.transform.parent.TransformVector(col.transform.localScale);
 
+                PhysicsShapeAuthoring shape;
+                if (colliderAuthoringExist)
+                {
+                    shape = colObj.GetComponent<PhysicsShapeAuthoring>();
+                }
+                else
+                {
+                    shape = colObj.AddComponent<PhysicsShapeAuthoring>();
+                }
                 switch (col.GetType().ToString())
                 {
                     case "UnityEngine.BoxCollider":
@@ -46,7 +65,7 @@ namespace ImaginaryReactor
                         //box.center = origBox.center;
                         //box.size = origBox.size;
                         //box.isTrigger = origBox.isTrigger;
-                        var shape = colObj.AddComponent<PhysicsShapeAuthoring>();
+                       
                         shape.SetBox(new Unity.Physics.BoxGeometry()
                         {
                             Center = origBox.center,
@@ -64,7 +83,6 @@ namespace ImaginaryReactor
                         //sphere.radius = origSphere.radius;
                         //sphere.center = origSphere.center;
                         //sphere.isTrigger = origSphere.isTrigger;
-                        shape = colObj.AddComponent<PhysicsShapeAuthoring>();
                         shape.SetSphere(new Unity.Physics.SphereGeometry()
                         {
                             Center = origSphere.center,
@@ -80,7 +98,6 @@ namespace ImaginaryReactor
                         //capsule.center = origCapsule.center;
                         //capsule.height = origCapsule.height;
                         //capsule.isTrigger = origCapsule.isTrigger;
-                        shape = colObj.AddComponent<PhysicsShapeAuthoring>();
                         shape.SetCapsule//SetCylinder 
                             (new Unity.Physics.Authoring.CapsuleGeometryAuthoring()
                             {
@@ -95,7 +112,15 @@ namespace ImaginaryReactor
                 }
 
 
-                var hitAuthoring = colObj.AddComponent<ComplexHitboxAuthoring>();
+                ComplexHitboxAuthoring hitAuthoring;
+                if (colliderAuthoringExist)
+                {
+                    hitAuthoring = colObj.GetComponent<ComplexHitboxAuthoring>();
+                }
+                else
+                {
+                    hitAuthoring = colObj.AddComponent<ComplexHitboxAuthoring>(); 
+                }
                 hitAuthoring.ID = col.GetInstanceID();
                 hitAuthoring.OwnerGO = newCharacter;
 
@@ -115,12 +140,19 @@ namespace ImaginaryReactor
 
             if (TryGetComponent(out ModelSyncObject modelObj))
             {
-                newCharacter.AddComponent<ModelSyncAuthoring>().ID = modelObj.ID;
+                if (newCharacter.TryGetComponent(out ModelSyncAuthoring existSyncAuthoring))
+                {
+                    existSyncAuthoring.ID = modelObj.ID;
+                }
+                else
+                {
+                    newCharacter.AddComponent<ModelSyncAuthoring>().ID = modelObj.ID;
+                }
             }
 
 
 
-            if (ExtendedComponentGrabber.TryGetComponentFromChildren(newCharacter.transform, out OrbitCameraAuthoring orbitCam,
+            if (ExtendedChildGrabber.TryGetComponentFromChildren(newCharacter.transform, out OrbitCameraAuthoring orbitCam,
                 out Transform childTf))
             {
                 orbitCam.IgnoredEntities = newColliders;
@@ -138,7 +170,7 @@ namespace ImaginaryReactor
         }
     }
 
-    public static class ExtendedComponentGrabber
+    public static class ExtendedChildGrabber
     {
         public static bool TryGetComponentFromChildren<T>(Transform transform, out T component, out Transform selectedChild)
         {
@@ -154,6 +186,21 @@ namespace ImaginaryReactor
             }
             selectedChild = transform;
             return transform.TryGetComponent(out component) && false;
+        }
+
+        public static bool TryGetSameNameTransformFromChildren(Transform transform, string targetName, out Transform selectedChild)
+        {
+            selectedChild = null;
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                if(targetName == transform.GetChild(i).gameObject.name)
+                {
+                    selectedChild = transform.GetChild(i);
+                    return true;
+                }
+            }
+            selectedChild = transform;
+            return false;
         }
     }
 }
