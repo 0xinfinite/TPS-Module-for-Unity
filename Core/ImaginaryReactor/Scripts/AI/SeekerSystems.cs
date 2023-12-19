@@ -26,12 +26,13 @@ public struct SeekerCastObstructionHitsCollector : ICollector<ColliderCastHit>
     private DynamicBuffer<IgnoreHitboxData> _ignoredEntitiesBuffer;
     private ColliderKey _targetKey;
     //[ReadOnly]
-    private ComponentLookup<MagicIFF> _iffLookUp;
+    //private ComponentLookup<MagicIFF> _iffLookUp;
     public NativeArray<ColliderCastHit> Hits;
     //private int currentIndex;
 
     public SeekerCastObstructionHitsCollector(//Entity followedCharacter,
-        DynamicBuffer<IgnoreHitboxData> ignoredEntitiesBuffer, ColliderKey targetKey, ComponentLookup<MagicIFF> iffLookUp, int capacity = 1)
+        DynamicBuffer<IgnoreHitboxData> ignoredEntitiesBuffer, ColliderKey targetKey, //ComponentLookup<MagicIFF> iffLookUp, 
+        int capacity = 1)
     {
         NumHits = 0;
         ClosestHit = default;
@@ -39,7 +40,7 @@ public struct SeekerCastObstructionHitsCollector : ICollector<ColliderCastHit>
         //_followedCharacter = followedCharacter;
         _ignoredEntitiesBuffer = ignoredEntitiesBuffer;
         _targetKey= targetKey;
-        _iffLookUp = iffLookUp;
+       // _iffLookUp = iffLookUp;
 
         Hits = new NativeArray<ColliderCastHit>(capacity, Allocator.Temp);
         //currentIndex = 0;
@@ -65,10 +66,36 @@ public struct SeekerCastObstructionHitsCollector : ICollector<ColliderCastHit>
                 return false;
             }
         }
-        if (_iffLookUp.HasComponent(hit.Entity))
-        {
-            if (_iffLookUp[hit.Entity].Key//hit.Material.CustomTags 
-                    == _targetKey.Value)
+        //if (_iffLookUp.HasComponent(hit.Entity))
+        //{
+        //    if (_iffLookUp[hit.Entity].Key//hit.Material.CustomTags 
+        //            == _targetKey.Value)
+        //    {
+        //        bool reachedEnd = NumHits + 1 >= Hits.Length;
+        //        // Process valid hit
+        //        if (hit.Fraction < _closestHitFraction)
+        //        {
+        //            _closestHitFraction = hit.Fraction;
+        //            ClosestHit = hit;
+        //        }
+
+        //        if (reachedEnd)
+        //        {
+        //            Hits[Hits.Length - 1] = ClosestHit;
+        //        }
+        //        else
+        //        {
+        //            Hits[NumHits] = hit;
+        //            //currentIndex++;
+        //            NumHits++;
+        //        }
+
+
+        //        return true;
+        //    }
+        //}
+            //else
+            if(hit.Material.CustomTags == _targetKey )
             {
                 bool reachedEnd = NumHits + 1 >= Hits.Length;
                 // Process valid hit
@@ -92,7 +119,6 @@ public struct SeekerCastObstructionHitsCollector : ICollector<ColliderCastHit>
 
                 return true;
             }
-        }
 
         return false;
     }
@@ -302,7 +328,7 @@ public struct ColliderCastObstructionHitsCollector : ICollector<ColliderCastHit>
                     };
 
                     var buffer = entityManager.GetBuffer<IgnoreHitboxData>(entity);
-                    collector = new SeekerCastObstructionHitsCollector(buffer, seeker.TargetSideKey, SystemAPI.GetComponentLookup<MagicIFF>(true),
+                    collector = new SeekerCastObstructionHitsCollector(buffer, seeker.TargetSideKey, //SystemAPI.GetComponentLookup<MagicIFF>(true),
                         8);
                     if (physicsWorld.CastCollider(input, ref collector))
                     {
@@ -422,7 +448,11 @@ public struct ColliderCastObstructionHitsCollector : ICollector<ColliderCastHit>
                             }
                         }
                     }
-                    collector.Dispose();
+                else
+                {
+                    UnityEngine.Debug.Log("No Collision");
+                }    
+                collector.Dispose();
                 }
 
 

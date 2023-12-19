@@ -13,14 +13,44 @@ namespace ImaginaryReactor
     {
         [SerializeField] private GameObject characterPrefab;
         [SerializeField] private Collider[] colliders;
-
+        [SerializeField] private bool fixMode;
+        [SerializeField] private GameObject targetGOToFixCollider;
         public void SettingHitboxes()
         {
+
+            if (fixMode)
+            {
+                if(targetGOToFixCollider==null)
+                {
+                    Debug.LogWarning("You must assign Target GO To Fix Collider to proceed fixing colliders.");
+                }
+
+                for(int i = 0; i< targetGOToFixCollider.transform.childCount; i++)
+                {
+                    var targetChild = targetGOToFixCollider.transform.GetChild(i);
+                    if(targetChild.TryGetComponent(out ComplexHitboxAuthoring authoring))
+                    {
+                        Debug.Log("Get Authoring : "+ targetChild.gameObject.name);
+                        if (ExtendedChildGrabber.TryGetSameNameTransformFromChildrenRecursively(transform, targetChild.gameObject.name,out Transform selectedChild))
+                        {
+                            Debug.Log("Find Same Name Object");
+                            if (selectedChild.TryGetComponent(out ColliderSyncObject syncObj))
+                            {
+                                Debug.Log("Sync ID");
+                                syncObj.ID = authoring.ID;
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+
             if (characterPrefab == null)
             {
                 Debug.LogWarning("You must assign Character Prefab to proceed configuration.");
                 return;
             }
+
 
             GameObject newCharacter = Instantiate(characterPrefab, null); // = new GameObject("Third Person Character");
             newCharacter.transform.position = transform.position;
@@ -104,7 +134,8 @@ namespace ImaginaryReactor
                                 Center = origCapsule.center,
                                 Height = origCapsule.height,
                                 Radius = origCapsule.radius,
-                                Orientation = quaternion.Euler(origCapsule.direction == 1 ? -90 : 0, origCapsule.direction == 0 ? -90 : 0, 0)
+                                Orientation = new Unity.Physics.Authoring.EulerAngles() { Value = new float3(origCapsule.direction == 1 ? -90 : 0, origCapsule.direction == 0 ? -90 : 0, 0) }
+                                //quaternion.Euler(origCapsule.direction == 1 ? -90 : 0, origCapsule.direction == 0 ? -90 : 0, 0)
                             });
                         shape.PreventMergedOnParent = true;
                         shape.CollisionResponse = Unity.Physics.CollisionResponsePolicy.CollideRaiseCollisionEvents;
@@ -197,6 +228,29 @@ namespace ImaginaryReactor
                 {
                     selectedChild = transform.GetChild(i);
                     return true;
+                }
+            }
+            selectedChild = transform;
+            return false;
+        }
+        public static bool TryGetSameNameTransformFromChildrenRecursively(Transform transform, string targetName, out Transform selectedChild)
+        {
+            selectedChild = null;
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                var child = transform.GetChild(i);
+                if (targetName == child.gameObject.name)
+                {
+                    selectedChild = transform.GetChild(i);
+                    return true;
+                }
+                else
+                {
+                    if (TryGetSameNameTransformFromChildrenRecursively(child, targetName, out Transform selectedChild2))
+                    {
+                        selectedChild = selectedChild2;
+                        return true;
+                    }
                 }
             }
             selectedChild = transform;
