@@ -39,6 +39,10 @@ namespace ImaginaryReactor
         public float PitchAngle;
         [HideInInspector]
         public float3 PlanarForward;
+        [HideInInspector]
+        public float3 PlanarFirstPersonForward;
+        [HideInInspector]
+        public quaternion ThirdPersonRotation;
 
         public static OrbitCamera GetDefault()
         {
@@ -61,6 +65,7 @@ namespace ImaginaryReactor
                 PreventFixedUpdateJitter = true,
 
                 CurrentDistanceFromObstruction = 0f,
+                ThirdPersonRotation = Quaternion.identity,
             };
             return c;
         }
@@ -72,6 +77,7 @@ namespace ImaginaryReactor
         public Entity FollowedCharacterEntity;
         public float2 Look;
         public float Zoom;
+        public bool ToggleZoom;
     }
 
     [Serializable]

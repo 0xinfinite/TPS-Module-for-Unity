@@ -89,6 +89,9 @@ namespace ImaginaryReactor {
                 LocalToWorldLookup = SystemAPI.GetComponentLookup<LocalToWorld>(false),
                 CameraTargetLookup = SystemAPI.GetComponentLookup<CameraTarget>(true),
                 KinematicCharacterBodyLookup = SystemAPI.GetComponentLookup<KinematicCharacterBody>(true),
+                SightsLookup = SystemAPI.GetComponentLookup<AimingSights>(false),
+                TelescopeLookup = SystemAPI.GetComponentLookup<Telescope>(false),
+                MainCameraLookup = SystemAPI.GetComponentLookup<MainEntityCamera>(false)
             };
             job.Schedule();
         }
@@ -103,6 +106,9 @@ namespace ImaginaryReactor {
             public ComponentLookup<LocalToWorld> LocalToWorldLookup;
             [ReadOnly] public ComponentLookup<CameraTarget> CameraTargetLookup;
             [ReadOnly] public ComponentLookup<KinematicCharacterBody> KinematicCharacterBodyLookup;
+            public ComponentLookup<AimingSights> SightsLookup;
+            public ComponentLookup<Telescope> TelescopeLookup;
+            public ComponentLookup<MainEntityCamera> MainCameraLookup;
 
             void Execute(
                 Entity entity,
@@ -111,6 +117,27 @@ namespace ImaginaryReactor {
                 in OrbitCameraControl cameraControl,
                 in DynamicBuffer<OrbitCameraIgnoredEntityBufferElement> ignoredEntitiesBuffer)
             {
+                float zoomProgress = 0;
+                bool scopeFirstPerson = false;
+
+                if (TelescopeLookup.HasComponent(entity) && MainCameraLookup.HasComponent(entity))
+                {
+                    Telescope telescope = TelescopeLookup[entity];
+                    MainEntityCamera mainCamera = MainCameraLookup[entity];
+
+                    zoomProgress = math.saturate(
+                        math.clamp(cameraControl.Zoom, telescope.ZoomProgress - DeltaTime * telescope.ZoomSpeed, telescope.ZoomProgress + DeltaTime * telescope.ZoomSpeed)
+                        );
+                    telescope.ZoomProgress = zoomProgress;
+
+                    scopeFirstPerson = telescope.FirstPerson;
+
+                    mainCamera.Fov = math.lerp(mainCamera.BaseFov, telescope.FovWhenZoom, telescope.ZoomProgress);
+
+                    MainCameraLookup[entity] = mainCamera;
+                    TelescopeLookup[entity] = telescope;
+                }
+
                 // if there is a followed entity, place the camera relatively to it
                 if (LocalToWorldLookup.TryGetComponent(cameraControl.FollowedCharacterEntity, out LocalToWorld characterLTW))
                 {
@@ -149,14 +176,18 @@ namespace ImaginaryReactor {
 
                         // Final rotation
                         rot = quaternion.LookRotationSafe(orbitCamera.PlanarForward, targetEntityLocalToWorld.Up);
-                        transform.Rotation = math.mul(rot, pitchRotation);
+                        orbitCamera.ThirdPersonRotation = math.mul(rot, pitchRotation);
                     }
 
-                    float3 cameraForward = MathUtilities.GetForwardFromRotation(transform.Rotation);
+                    float3 cameraForward = MathUtilities.GetForwardFromRotation(orbitCamera.ThirdPersonRotation);//transform.Rotation);
 
                     // Distance input
                     float desiredDistanceMovementFromInput = cameraControl.Zoom * orbitCamera.DistanceMovementSpeed;
-                    orbitCamera.TargetDistance = math.clamp(orbitCamera.TargetDistance + desiredDistanceMovementFromInput, orbitCamera.MinDistance, orbitCamera.MaxDistance);
+                    float desireDistance = math.clamp(orbitCamera.TargetDistance + desiredDistanceMovementFromInput, orbitCamera.MinDistance, orbitCamera.MaxDistance);
+                    orbitCamera.TargetDistance = //scopeFirstPerson ? 
+                        //math.lerp(desireDistance, 0, zoomProgress)
+                        //:
+                        desireDistance;
                     orbitCamera.CurrentDistanceFromMovement = math.lerp(orbitCamera.CurrentDistanceFromMovement, orbitCamera.TargetDistance, MathUtilities.GetSharpnessInterpolant(orbitCamera.DistanceMovementSharpness, DeltaTime));
 
                     // Obstructions
@@ -223,12 +254,56 @@ namespace ImaginaryReactor {
                     }
 
                     // Calculate final camera position from targetposition + rotation + distance
-                    transform.Position = (targetEntityLocalToWorld.Position + targetEntityLocalToWorld.Up * orbitCamera.PositionOffset.y + targetEntityLocalToWorld.Right * orbitCamera.PositionOffset.x) + (-cameraForward * orbitCamera.CurrentDistanceFromObstruction);
+                    float3 thirdPersonPosition = (targetEntityLocalToWorld.Position + targetEntityLocalToWorld.Up * orbitCamera.PositionOffset.y + targetEntityLocalToWorld.Right * orbitCamera.PositionOffset.x) + (-cameraForward * orbitCamera.CurrentDistanceFromObstruction);
+                    transform.Position = scopeFirstPerson? 
+                        math.lerp(thirdPersonPosition, targetEntityLocalToWorld.Position, zoomProgress)
+                        : thirdPersonPosition ;
+
+
+                    if (scopeFirstPerson && SightsLookup.HasComponent(cameraControl.FollowedCharacterEntity))
+                    {
+                            AimingSights sights = SightsLookup[cameraControl.FollowedCharacterEntity];
+                            if (cameraControl.ToggleZoom)
+                            {
+                                UnityEngine.Debug.Log("Zoom Toggled");
+                            float3 targetDir = math.normalizesafe(sights.LaserPointerPosition - targetEntityLocalToWorld.Position);
+                            sights.FirstPersonZoomOffset = new float4x4(orbitCamera.ThirdPersonRotation, targetEntityLocalToWorld.Position).InverseTransformRotation(
+                                quaternion.LookRotation(targetDir, new float3(0,1,0)));
+                                //math.normalizesafe(
+                                //new float4x4(orbitCamera.ThirdPersonRotation, targetEntityLocalToWorld.Position)
+                                //.InverseTransformDirection(math.normalizesafe( sights.LaserPointerPosition- targetEntityLocalToWorld.Position));
+
+                                //); //new float3(0f, 0f, 0); //targetEntityLocalToWorld math.normalizesafe( sights.LaserPointerPosition - targetEntityLocalToWorld.Position);
+                            SightsLookup[cameraControl.FollowedCharacterEntity] = sights;
+                            }
+                        //SightsLookup[cameraControl.FollowedCharacterEntity] = sights;
+
+                        quaternion offsetRot = math.mul(orbitCamera.ThirdPersonRotation, sights.FirstPersonZoomOffset);
+                        float3 fwd = math.mul(orbitCamera.ThirdPersonRotation, new float3(0, 0, 1));
+                        float3 offsetFwd = math.mul(offsetRot, new float3(0, 0, 1));
+                        float3 up = math.mul(orbitCamera.ThirdPersonRotation, new float3(0, 1, 0));
+                        float3 offsetUp = math.mul(offsetRot, new float3(0, 1, 0));
+                        //float4x4 tempMat = new float4x4(orbitCamera.ThirdPersonRotation , transform.Position );
+                        transform.Rotation = quaternion.LookRotation(
+                            math.normalizesafe(math.lerp(fwd, offsetFwd
+                            //+ new float3(sights.FirstPersonZoomOffset.x,0,0)// tempMat.InverseTransformPoint( new float3(sights.FirstPersonZoomOffset.x,0,0))
+                            , zoomProgress)),
+                        //math.normalizesafe(math.lerp(up,up + tempMat.InverseTransformPoint( new float3(0, sights.FirstPersonZoomOffset.y, 0)), zoomProgress)))
+                            math.normalizesafe( math.lerp(up, offsetUp , zoomProgress)) 
+                       )
+                    ;
+                    }
+                    else
+                    {
+                        transform.Rotation = orbitCamera.ThirdPersonRotation; 
+                    }
 
                     // Manually calculate the LocalToWorld since this is updating after the Transform systems, and the LtW is what rendering uses
                     LocalToWorld cameraLocalToWorld = new LocalToWorld();
                     cameraLocalToWorld.Value = new float4x4(transform.Rotation, transform.Position);
                     LocalToWorldLookup[entity] = cameraLocalToWorld;
+
+                    
                 }
             }
         }

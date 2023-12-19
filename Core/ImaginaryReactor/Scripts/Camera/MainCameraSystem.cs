@@ -17,6 +17,7 @@ namespace ImaginaryReactor
                 Entity mainEntityCameraEntity = SystemAPI.GetSingletonEntity<MainEntityCamera>();
                 LocalToWorld targetLocalToWorld = SystemAPI.GetComponent<LocalToWorld>(mainEntityCameraEntity);
                 MainGameObjectCamera.Instance.transform.SetPositionAndRotation(targetLocalToWorld.Position, targetLocalToWorld.Rotation);
+                MainGameObjectCamera.Instance.fieldOfView = SystemAPI.GetSingleton<MainEntityCamera>().Fov;
             }
         }
     }

@@ -8,5 +8,7 @@ namespace ImaginaryReactor
     [Serializable]
     public struct MainEntityCamera : IComponentData
     {
+        public float BaseFov;
+        public float Fov;
     }
 }

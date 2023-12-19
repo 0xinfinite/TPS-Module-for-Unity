@@ -31,8 +31,9 @@ namespace ImaginaryReactor {
             playerInputs.ValueRW.MoveInput.x += Input.GetKey(KeyCode.A) ? -1f : 0f;
             
             playerInputs.ValueRW.CameraLookInput = new float2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-            //playerInputs.ValueRW.CameraZoomInput = -Input.mouseScrollDelta.y;
-            
+                //playerInputs.ValueRW.CameraZoomInput = -Input.mouseScrollDelta.y;
+                playerInputs.ValueRW.CameraZoomInput = Input.GetMouseButton(1)?1:0;
+
             // For button presses that need to be queried during fixed update, use the "FixedInputEvent" helper struct.
             // This is part of a strategy for proper handling of button press events that are consumed during the fixed update group
             if (Input.GetKeyDown(KeyCode.Space))
@@ -80,6 +81,12 @@ namespace ImaginaryReactor {
                 
                 cameraControl.FollowedCharacterEntity = player.ControlledCharacter;
                 cameraControl.Look = playerInputs.CameraLookInput;
+                    cameraControl.ToggleZoom =// playerInputs.CameraZoomInput > 0.5f ?
+                        cameraControl.Zoom < 0.0001f ? (playerInputs.CameraZoomInput > 0.0001f ? true : false) : false
+                        ;
+                            //:
+                        //cameraControl.Zoom > 0.9999f ? (playerInputs.CameraZoomInput < 0.9999f?true:false) : false
+                        //    ;
                 cameraControl.Zoom = playerInputs.CameraZoomInput;
 
                 SystemAPI.SetComponent(player.ControlledCamera, cameraControl);

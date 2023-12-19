@@ -22,6 +22,8 @@ namespace ImaginaryReactor
         [HideInInspector]
         public float3 MuzzleForward;
         [HideInInspector]
+        public quaternion FirstPersonZoomOffset;
+        [HideInInspector]
         public float3 LaserPointerPosition;
 
 
