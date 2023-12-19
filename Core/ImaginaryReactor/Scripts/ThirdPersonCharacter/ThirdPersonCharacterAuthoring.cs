@@ -43,7 +43,14 @@ namespace ImaginaryReactor
                     LaserPointEntity = GetEntity(authoring.laserPoint, TransformUsageFlags.Dynamic),
                     FollowedCameraEntity = GetEntity(authoring.targetOrbitCamera, TransformUsageFlags.Dynamic),
                     RayFilter = new CollisionFilter() { BelongsTo = authoring.AimRayFilter.Value, CollidesWith = authoring.AimRayFilter.Value } //FilterConversion.LayerMaskToFilter(authoring.layerMask) //new CollisionFilter() { BelongsTo = 1u, CollidesWith = (uint)authoring.layerMask.value }
-                    
+                   //, CurrentSwitchShoulderViewOffset = quaternion.identity
+                   //, TargetSwitchShoulderViewOffset = quaternion.identity
+                   ,
+                    DefaultShoulderViewOffset = quaternion.identity
+                    , AlternativeShoulderViewOffset = quaternion.identity,
+                    FirstPersonZoomOffset = quaternion.identity
+                    //LeftShoulderViewOffset = quaternion.identity,
+                    //RightShoulderViewOffset = quaternion.identity
                 });
 
 

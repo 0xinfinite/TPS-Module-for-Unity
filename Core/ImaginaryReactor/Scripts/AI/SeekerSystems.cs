@@ -448,10 +448,10 @@ public struct ColliderCastObstructionHitsCollector : ICollector<ColliderCastHit>
                             }
                         }
                     }
-                else
-                {
-                    UnityEngine.Debug.Log("No Collision");
-                }    
+                //else
+                //{
+                //    UnityEngine.Debug.Log("No Collision");
+                //}    
                 collector.Dispose();
                 }
 

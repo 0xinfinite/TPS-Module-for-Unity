@@ -254,49 +254,164 @@ namespace ImaginaryReactor {
                     }
 
                     // Calculate final camera position from targetposition + rotation + distance
-                    float3 thirdPersonPosition = (targetEntityLocalToWorld.Position + targetEntityLocalToWorld.Up * orbitCamera.PositionOffset.y + targetEntityLocalToWorld.Right * orbitCamera.PositionOffset.x) + (-cameraForward * orbitCamera.CurrentDistanceFromObstruction);
-                    transform.Position = scopeFirstPerson? 
-                        math.lerp(thirdPersonPosition, targetEntityLocalToWorld.Position, zoomProgress)
-                        : thirdPersonPosition ;
+                    //bool switchShoulderView = false;
+                    if (cameraControl.SwitchView)
+                    {
+                        orbitCamera.viewDirectionRate = orbitCamera.viewDirectionRate > 0 ? 0.99f : -0.99f;
+                        //switchShoulderView = true;
+                    }
+                    float shouderSwitchSpeed = 10;
+                    bool willReachEndOfShoulderPoint =  //!(orbitCamera.viewDirectionRate > 0.999f|| orbitCamera.viewDirectionRate < -0.999f) 
+                        //&&
+                        ((orbitCamera.viewDirectionRate < 0.999f && orbitCamera.viewDirectionRate > 0 && orbitCamera.viewDirectionRate - DeltaTime * shouderSwitchSpeed < 0) || 
+                        (orbitCamera.viewDirectionRate > -0.999f && orbitCamera.viewDirectionRate < 0 && orbitCamera.viewDirectionRate + DeltaTime * shouderSwitchSpeed > 0));
 
+                    orbitCamera.viewDirectionRate = orbitCamera.viewDirectionRate > 0 ?
+                        orbitCamera.viewDirectionRate<0.999f? 
+                        (willReachEndOfShoulderPoint ?-1 : orbitCamera.viewDirectionRate-DeltaTime* shouderSwitchSpeed)
+                            : orbitCamera.viewDirectionRate
+                        :
+                        orbitCamera.viewDirectionRate > -0.999f ? 
+                        (willReachEndOfShoulderPoint ? 1:orbitCamera.viewDirectionRate + DeltaTime* shouderSwitchSpeed)
+                            : orbitCamera.viewDirectionRate
+                        ;
+
+                    //UnityEngine.Debug.Log("Orbit Camera view direction rate : " + orbitCamera.viewDirectionRate);
+
+                    float shoulderRate = orbitCamera.viewDirectionRate>0? orbitCamera.viewDirectionRate : orbitCamera.viewDirectionRate+1;
+                    //UnityEngine.Debug.Log(shoulderRate);
+                    float4x4 camRotTgtPosMat = new float4x4(orbitCamera.ThirdPersonRotation, targetEntityLocalToWorld.Position);
+                    float3 thirdPersonPosition = 
+                        camRotTgtPosMat.TransformPoint(new float3(
+                            math.lerp(orbitCamera.PositionOffset.x * -1, orbitCamera.PositionOffset.x, shoulderRate)
+                        , orbitCamera.PositionOffset.y, 0))
+                        //(targetEntityLocalToWorld.Position 
+                        //+ targetEntityLocalToWorld.Up * orbitCamera.PositionOffset.y +
+                        //targetEntityLocalToWorld.Right * math.lerp(orbitCamera.PositionOffset.x*-1, orbitCamera.PositionOffset.x, shoulderRate)
+                        //) 
+                        + (-cameraForward * orbitCamera.CurrentDistanceFromObstruction);
+
+                    //shoulderRate = //orbitCamera.viewDirectionRate > 0 ? 1-shoulderRate : shoulderRate;
+
+                    //UnityEngine.Debug.Log(shoulderRate);
 
                     if (scopeFirstPerson && SightsLookup.HasComponent(cameraControl.FollowedCharacterEntity))
                     {
                             AimingSights sights = SightsLookup[cameraControl.FollowedCharacterEntity];
-                            if (cameraControl.ToggleZoom)
-                            {
-                                UnityEngine.Debug.Log("Zoom Toggled");
+                        bool offsetChanged = false;
+                        bool toggleZoom = cameraControl.ToggleZoom;
+                        //float3 targetDir = float3.zero;
+                        //quaternion targetRotation = quaternion.identity;
+                        //if (toggleZoom || switchShoulderView)
+                        //{
+                        //    targetDir = math.normalizesafe(sights.LaserPointerPosition - targetEntityLocalToWorld.Position);
+                        //    targetRotation = quaternion.LookRotation(targetDir, new float3(0, 1, 0));
+                        //}
+                            if (toggleZoom)
+                        {
                             float3 targetDir = math.normalizesafe(sights.LaserPointerPosition - targetEntityLocalToWorld.Position);
-                            sights.FirstPersonZoomOffset = new float4x4(orbitCamera.ThirdPersonRotation, targetEntityLocalToWorld.Position).InverseTransformRotation(
-                                quaternion.LookRotation(targetDir, new float3(0,1,0)));
-                                //math.normalizesafe(
-                                //new float4x4(orbitCamera.ThirdPersonRotation, targetEntityLocalToWorld.Position)
-                                //.InverseTransformDirection(math.normalizesafe( sights.LaserPointerPosition- targetEntityLocalToWorld.Position));
-
-                                //); //new float3(0f, 0f, 0); //targetEntityLocalToWorld math.normalizesafe( sights.LaserPointerPosition - targetEntityLocalToWorld.Position);
-                            SightsLookup[cameraControl.FollowedCharacterEntity] = sights;
+                            quaternion targetRotation = quaternion.LookRotation(targetDir, new float3(0, 1, 0));
+                            //UnityEngine.Debug.Log("Zoom Toggled");
+                            sights.FirstPersonZoomOffset = camRotTgtPosMat.InverseTransformRotation(
+                                targetRotation);
+                            offsetChanged = true;
                             }
-                        //SightsLookup[cameraControl.FollowedCharacterEntity] = sights;
+                        //if (switchShoulderView)
+                        //{
+                        //    float3 targetShoulderViewPoint = camRotTgtPosMat.TransformPoint(new float3(
+                        //        orbitCamera.PositionOffset.x * orbitCamera.viewDirectionRate > 0 ? -1 : 1
+                        //        , orbitCamera.PositionOffset.y, 0));
 
-                        quaternion offsetRot = math.mul(orbitCamera.ThirdPersonRotation, sights.FirstPersonZoomOffset);
-                        float3 fwd = math.mul(orbitCamera.ThirdPersonRotation, new float3(0, 0, 1));
-                        float3 offsetFwd = math.mul(offsetRot, new float3(0, 0, 1));
-                        float3 up = math.mul(orbitCamera.ThirdPersonRotation, new float3(0, 1, 0));
-                        float3 offsetUp = math.mul(offsetRot, new float3(0, 1, 0));
-                        //float4x4 tempMat = new float4x4(orbitCamera.ThirdPersonRotation , transform.Position );
-                        transform.Rotation = quaternion.LookRotation(
-                            math.normalizesafe(math.lerp(fwd, offsetFwd
-                            //+ new float3(sights.FirstPersonZoomOffset.x,0,0)// tempMat.InverseTransformPoint( new float3(sights.FirstPersonZoomOffset.x,0,0))
-                            , zoomProgress)),
-                        //math.normalizesafe(math.lerp(up,up + tempMat.InverseTransformPoint( new float3(0, sights.FirstPersonZoomOffset.y, 0)), zoomProgress)))
-                            math.normalizesafe( math.lerp(up, offsetUp , zoomProgress)) 
-                       )
-                    ;
+                        //    float4x4 targetShoulderViewMatrix = new float4x4(orbitCamera.ThirdPersonRotation, targetShoulderViewPoint);
+
+                        //    float3 targetDir = math.normalizesafe(sights.LaserPointerPosition - targetShoulderViewPoint);
+                        //    quaternion targetWorldRotation = quaternion.LookRotation(targetDir, new float3(0, 1, 0));
+                        //    sights.TargetSwitchShoulderViewOffset = targetShoulderViewMatrix.InverseTransformRotation(targetWorldRotation);
+
+                        //    //new float4x4(orbitCamera.ThirdPersonRotation, (targetEntityLocalToWorld.Position +
+                        //    //targetEntityLocalToWorld.Right * orbitCamera.PositionOffset.x * (orbitCamera.viewDirectionRate > 0 ? 1:-1)) ).InverseTransformRotation(
+                        //    //targetRotation);
+
+                        //    //if (orbitCamera.viewDirectionRate > 0)
+                        //    //{
+                        //    //    sights.LeftShoulderViewOffset = targetShoulderViewMatrix.InverseTransformRotation(targetWorldRotation);
+                        //    //    sights.RightShoulderViewOffset = quaternion.identity;
+                        //    //}
+                        //    //else
+                        //    //{
+                        //    //    sights.RightShoulderViewOffset = targetShoulderViewMatrix.InverseTransformRotation(targetWorldRotation);
+                        //    //    sights.LeftShoulderViewOffset = quaternion.identity;
+                        //    //}
+
+                        //    offsetChanged = true;
+                        //}
+                        
+
+                        if (offsetChanged)
+                        {
+                            SightsLookup[cameraControl.FollowedCharacterEntity] = sights; 
+                        }
+
+                        //if (toggleZoom)
+                        {
+                            //quaternion offsetRot = math.mul(orbitCamera.ThirdPersonRotation, sights.FirstPersonZoomOffset);
+                            //float3 fwd = math.mul(orbitCamera.ThirdPersonRotation, new float3(0, 0, 1));
+                            //float3 offsetFwd = math.mul(offsetRot, new float3(0, 0, 1));
+                            //float3 up = math.mul(orbitCamera.ThirdPersonRotation, new float3(0, 1, 0));
+                            //float3 offsetUp = math.mul(offsetRot, new float3(0, 1, 0));
+                            //transform.Rotation = quaternion.LookRotation(
+                            //    math.normalizesafe(math.lerp(fwd, offsetFwd
+                            //    , zoomProgress)),
+                            //    math.normalizesafe(math.lerp(up, offsetUp, zoomProgress)));
+                        }
+                        //if (!willReachEndOfShoulderPoint && orbitCamera.viewDirectionRate < 0.999f && orbitCamera.viewDirectionRate > -0.999f)//switchShoulderView)
+                        //{
+                        //    //UnityEngine.Debug.Log("Shoulder Rate : " + shoulderRate);
+                        //    quaternion offsetRot = math.mul(orbitCamera.ThirdPersonRotation, sights.SwitchShoulderViewOffset);
+                        //    float3 fwd = math.mul(orbitCamera.ThirdPersonRotation, new float3(0, 0, 1));
+                        //    float3 offsetFwd = math.mul(offsetRot, new float3(0, 0, 1));
+                        //    float3 up = math.mul(orbitCamera.ThirdPersonRotation, new float3(0, 1, 0));
+                        //    float3 offsetUp = math.mul(offsetRot, new float3(0, 1, 0));
+                        //    //transform.Rotation = quaternion.LookRotation(
+                        //    //    math.normalizesafe(math.lerp(fwd, offsetFwd
+                        //    //    , shoulderRate)),
+                        //    //    math.normalizesafe(math.lerp(up, offsetUp, shoulderRate)));
+                        //}
+                        //UnityEngine.Debug.Log(shoulderRate);
+
+                        transform.Rotation
+                            =
+                            math.mul(
+                            orbitCamera.ThirdPersonRotation,
+                            //math.mul(
+                           // math.mul(
+                                math.slerp(quaternion.identity, sights.FirstPersonZoomOffset, zoomProgress)
+                            //, math.slerp(sights.LeftShoulderViewOffset, sights.RightShoulderViewOffset, shoulderRate) 
+                            //)
+                          //  )
+                        //    ,
+                            
+                        //    //sights.CurrentSwitchShoulderViewOffset
+                        //    math.slerp(
+                        //        orbitCamera.viewDirectionRate > 0? sights.TargetSwitchShoulderViewOffset : quaternion.identity // sights.LeftShoulderViewOffset
+                        //    , orbitCamera.viewDirectionRate<0? sights.TargetSwitchShoulderViewOffset : quaternion.identity //RightShoulderViewOffset
+                        //    , shoulderRate)
+                        // //math.slerp(sights.LeftShoulderViewOffset, sights.RightShoulderViewOffset, shoulderRate)
+                        //)
+                            )
+                            ;
+                        //transform.Rotate(math.slerp(quaternion.identity // sights.LeftShoulderViewOffset
+                        //    , sights.SwitchShoulderViewOffset //RightShoulderViewOffset
+                        //    , shoulderRate>0?DeltaTime : 0));
+                            
                     }
                     else
                     {
                         transform.Rotation = orbitCamera.ThirdPersonRotation; 
                     }
+                    transform.Position = scopeFirstPerson ?
+                        math.lerp(thirdPersonPosition, targetEntityLocalToWorld.Position, zoomProgress)
+                        : thirdPersonPosition;
 
                     // Manually calculate the LocalToWorld since this is updating after the Transform systems, and the LtW is what rendering uses
                     LocalToWorld cameraLocalToWorld = new LocalToWorld();

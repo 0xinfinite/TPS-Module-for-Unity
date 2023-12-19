@@ -22,6 +22,7 @@ namespace ImaginaryReactor
         public float CameraZoomInput;
         public FixedInputEvent JumpPressed;
         public float FloatingInput;
+        public FixedInputEvent SwitchViewPressed;
         public FixedInputEvent FirePressed;
         public FixedInputEvent InteractPressed;
     }

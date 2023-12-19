@@ -24,8 +24,19 @@ namespace ImaginaryReactor
         [HideInInspector]
         public quaternion FirstPersonZoomOffset;
         [HideInInspector]
+        public quaternion DefaultShoulderViewOffset;
+        [HideInInspector]
+        public quaternion AlternativeShoulderViewOffset;
+        //[HideInInspector]
+        //public quaternion TargetSwitchShoulderViewOffset;
+        //[HideInInspector]
+        //public quaternion CurrentSwitchShoulderViewOffset;
+        [HideInInspector]
         public float3 LaserPointerPosition;
-
+        //[HideInInspector]
+        //public quaternion RightShoulderViewOffset;
+        //[HideInInspector]
+        //public quaternion LeftShoulderViewOffset;
 
         //public float AimingSightsHeight;
 
@@ -36,7 +47,8 @@ namespace ImaginaryReactor
         {
             AimingSights c = new AimingSights
             {
-
+                //TargetSwitchShoulderViewOffset = quaternion.identity,
+                //CurrentSwitchShoulderViewOffset = quaternion.identity
             };
             return c;
         }

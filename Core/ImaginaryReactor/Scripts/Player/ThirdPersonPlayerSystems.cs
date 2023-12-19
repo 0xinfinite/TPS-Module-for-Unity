@@ -49,6 +49,10 @@ namespace ImaginaryReactor {
             {
                 playerInputs.ValueRW.InteractPressed.Set(fixedTick);
             }
+                if (Input.GetKeyDown(KeyCode.Tab))
+                {
+                    playerInputs.ValueRW.SwitchViewPressed.Set(fixedTick);
+                }
         }
     }
 }
@@ -73,6 +77,7 @@ namespace ImaginaryReactor {
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+            var tick = SystemAPI.GetSingleton<FixedTickSystem.Singleton>().Tick;
         foreach (var (playerInputs, player, playerTag) in SystemAPI.Query<ThirdPersonPlayerInputs, ThirdPersonPlayer, PlayerTag>().WithAll<Simulate>())
         {
             if (SystemAPI.HasComponent<OrbitCameraControl>(player.ControlledCamera))
@@ -88,6 +93,8 @@ namespace ImaginaryReactor {
                         //cameraControl.Zoom > 0.9999f ? (playerInputs.CameraZoomInput < 0.9999f?true:false) : false
                         //    ;
                 cameraControl.Zoom = playerInputs.CameraZoomInput;
+
+                    cameraControl.SwitchView = playerInputs.SwitchViewPressed.IsSet(tick);
 
                 SystemAPI.SetComponent(player.ControlledCamera, cameraControl);
             }
