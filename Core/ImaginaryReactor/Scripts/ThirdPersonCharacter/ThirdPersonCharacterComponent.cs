@@ -38,12 +38,17 @@ namespace ImaginaryReactor
         public bool PreventAirAccelerationAgainstUngroundedHits;
         public BasicStepAndSlopeHandlingParameters StepAndSlopeHandling;
 
-
+        [HideInInspector]
         public float GroundedTime;
+        [HideInInspector]
         public float3 WallNormal;
+        [HideInInspector]
         public float3 LastWallNormal;
+        [HideInInspector]
         public float WallSlideTime;
+        [HideInInspector]
         public int ContactCount;
+        [HideInInspector]
         public int AirJumpedCount;
 
         public static ThirdPersonCharacterComponent GetDefault()
@@ -91,5 +96,7 @@ namespace ImaginaryReactor
         public float3 CameraForwardVector;
         public bool Fire;
         public bool Interact;
+        public bool ThrowPress;
+        public bool ThrowRelease;
     }
 }

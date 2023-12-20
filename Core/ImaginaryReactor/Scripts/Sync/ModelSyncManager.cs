@@ -63,6 +63,29 @@ namespace ImaginaryReactor
             }
         }
 
+
+        public void PushLine(float3 startPos, float3 endPos)
+        {
+            //if (modelDict.ContainsKey(id))
+            float minDistance = float.MaxValue;
+            ModelSyncObject selectedObj = null;
+            foreach (var obj in modelDict.Values)
+            {
+                float tempDistance = Vector3.Distance(startPos, obj.transform.position);
+                if (minDistance > tempDistance)
+                {
+                    minDistance = tempDistance;
+                    selectedObj = obj;
+                }
+            }
+
+            if(selectedObj != null)
+            {
+                selectedObj.transform.GetComponent<ISync>().Line(startPos, endPos);
+            }
+        }
+
+
         public void AddModel(int id, ModelSyncObject obj)
         {
             if (modelDict.ContainsKey(id))

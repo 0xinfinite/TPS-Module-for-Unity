@@ -37,11 +37,11 @@ namespace ImaginaryReactor {
             //}
             var grabJob = new GrabWeaponJob
             {
-                CCLookUp = state.GetComponentLookup<ThirdPersonCharacterControl>(true),
-                WeaponLookUp = state.GetComponentLookup<Weapon>(true),
-                //LocalToWorldLookUp = state.GetComponentLookup<LocalToWorld>(false),
-                //HandLookUp = state.GetComponentLookup<Hand>(true),
-                //AimingSightsLookUp = state.GetComponentLookup<AimingSights>(true),
+                CCLookup = state.GetComponentLookup<ThirdPersonCharacterControl>(true),
+                WeaponLookup = state.GetComponentLookup<Weapon>(true),
+                //LocalToWorldLookup = state.GetComponentLookup<LocalToWorld>(false),
+                //HandLookup = state.GetComponentLookup<Hand>(true),
+                //AimingSightsLookup = state.GetComponentLookup<AimingSights>(true),
                 ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged),
             };//.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(),state.Dependency);//.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
 
@@ -68,13 +68,13 @@ namespace ImaginaryReactor {
     public partial struct GrabWeaponJob : ITriggerEventsJob
         {
             [ReadOnly]
-            public ComponentLookup<ThirdPersonCharacterControl> CCLookUp;
+            public ComponentLookup<ThirdPersonCharacterControl> CCLookup;
             [ReadOnly]
-            public ComponentLookup<Weapon> WeaponLookUp;
-            //public ComponentLookup<LocalToWorld> LocalToWorldLookUp;
+            public ComponentLookup<Weapon> WeaponLookup;
+            //public ComponentLookup<LocalToWorld> LocalToWorldLookup;
             //[ReadOnly]
-            //public ComponentLookup<Hand> HandLookUp;
-            //public ComponentLookup<AimingSights> AimingSightsLookUp;
+            //public ComponentLookup<Hand> HandLookup;
+            //public ComponentLookup<AimingSights> AimingSightsLookup;
             public EntityCommandBuffer ecb;
 
             [BurstCompile]
@@ -82,14 +82,14 @@ namespace ImaginaryReactor {
             {
 
 
-                if (WeaponLookUp.TryGetComponent(triggerEvent.EntityA, out Weapon weapon) && CCLookUp.TryGetComponent(triggerEvent.EntityB, out ThirdPersonCharacterControl cc)) //AimingSightsLookUp.TryGetComponent(triggerEvent.EntityB, out AimingSights sights))
+                if (WeaponLookup.TryGetComponent(triggerEvent.EntityA, out Weapon weapon) && CCLookup.TryGetComponent(triggerEvent.EntityB, out ThirdPersonCharacterControl cc)) //AimingSightsLookup.TryGetComponent(triggerEvent.EntityB, out AimingSights sights))
                 {
                     if (cc.Interact)
                     {
                         ecb.AddComponent(triggerEvent.EntityB, weapon);
                     }
                 }
-                else if (WeaponLookUp.TryGetComponent(triggerEvent.EntityB, out weapon) && CCLookUp.TryGetComponent(triggerEvent.EntityA, out cc)) //AimingSightsLookUp.TryGetComponent(triggerEvent.EntityA, out sights))
+                else if (WeaponLookup.TryGetComponent(triggerEvent.EntityB, out weapon) && CCLookup.TryGetComponent(triggerEvent.EntityA, out cc)) //AimingSightsLookup.TryGetComponent(triggerEvent.EntityA, out sights))
                 {
                     if (cc.Interact)
                     {

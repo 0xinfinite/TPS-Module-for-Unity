@@ -87,16 +87,16 @@ namespace ImaginaryReactor
             CharacterAspect.Update_ProcessStatefulCharacterHits();
         }
 
-        private void Jumping(bool ignoreInertia, ref KinematicCharacterBody body, float jumpSpeed, float3 desireToMove, float maxAirSpeed = 0)
+        private void Jumping(bool ignoreInertia, ref KinematicCharacterBody body, float jumpSpeed, float3 desireToMove, float3 groundingUp, float maxAirSpeed = 0)
         {
-            float3 velocityOnPlane = MathUtilities.ProjectOnPlane(body.RelativeVelocity, body.GroundingUp);
+            float3 velocityOnPlane = MathUtilities.ProjectOnPlane(body.RelativeVelocity, groundingUp);
             if (ignoreInertia && math.dot(math.normalizesafe(velocityOnPlane), math.normalizesafe(desireToMove)) < 0)
             {
-                body.RelativeVelocity = MathUtilities.ProjectOnPlane(desireToMove, body.GroundingUp) + (body.GroundingUp * jumpSpeed);
+                body.RelativeVelocity = MathUtilities.ProjectOnPlane(desireToMove, groundingUp) + (groundingUp * jumpSpeed);
             }
             else
             {
-                CharacterControlUtilities.StandardJump(ref body, body.GroundingUp * jumpSpeed, true, body.GroundingUp);
+                CharacterControlUtilities.StandardJump(ref body, groundingUp * jumpSpeed, true, groundingUp);
             }
         }
 
@@ -141,7 +141,8 @@ namespace ImaginaryReactor
                 if (/*characterControl.LastJumpPressedTime < 10 && */characterControl.Jump)//characterControl.Jump)
                 {
                     //CharacterControlUtilities.StandardJump(ref characterBody, characterBody.GroundingUp * characterComponent.JumpSpeed, true, characterBody.GroundingUp);
-                    Jumping(characterComponent.IgnoreInertiaWhenJump, ref characterBody, characterComponent.JumpSpeed / math.max(characterComponent.ContactCount, 1), characterControl.MoveVector * characterComponent.AirMaxSpeed);
+                    Jumping(characterComponent.IgnoreInertiaWhenJump, ref characterBody, characterComponent.JumpSpeed / math.max(characterComponent.ContactCount, 1)
+                        , characterControl.MoveVector, characterBody.GroundingUp, characterComponent.AirMaxSpeed);
                     characterControl.Jump = false;
                 }
                 characterComponent.LastWallNormal = float3.zero;
@@ -156,6 +157,7 @@ namespace ImaginaryReactor
                 if (characterComponent.AbleToWallRun && math.lengthsq(characterComponent.WallNormal) > 0.1 && math.distance(characterComponent.WallNormal,
                     characterComponent.LastWallNormal) > 0.1f && characterComponent.WallSlideTime < characterComponent.WallSlideDuration)//&& characterComponent.WallNormal.y < 0.3f)
                 {
+                    UnityEngine.Debug.Log("Wallrunning");
                     float3 tmpVelocity = characterBody.RelativeVelocity;
                     float3 verticalVelocity = math.projectsafe(tmpVelocity, characterBody.GroundingUp);
 
@@ -169,11 +171,12 @@ namespace ImaginaryReactor
                     //targetVelocity.y = 0;
 
                     CharacterControlUtilities.StandardGroundMove_Interpolated(ref characterBody.RelativeVelocity, targetVelocity,
-                        characterComponent.WallRunMovementSharpness, deltaTime, characterBody.GroundingUp,
+                        characterComponent.WallRunMovementSharpness, deltaTime, characterComponent.WallNormal,//characterBody.GroundingUp,
                         offsetAppliedWallNormal);//StandardGroundMove_Accelerated(ref characterBody.RelativeVelocity,
                                                  //    targetVelocity, characterComponent.WallRunMaxSpeed, deltaTime, characterBody.GroundingUp, offsetAppliedWallNormal, false);
 
-                    CharacterControlUtilities.AccelerateVelocity(ref verticalVelocity, characterComponent.Gravity * characterComponent.GravityMultiplierWhenWallSlide, deltaTime);
+                    CharacterControlUtilities.AccelerateVelocity(ref verticalVelocity,
+                        characterComponent.Gravity * characterComponent.GravityMultiplierWhenWallSlide , deltaTime);
 
                     float3 verticalDirection = math.normalizesafe(verticalVelocity);
                     if (math.dot(verticalDirection, characterComponent.Gravity) > 0 && math.length(verticalVelocity) > characterComponent.MaxWallSlideSpeed)
@@ -184,17 +187,26 @@ namespace ImaginaryReactor
                     characterBody.RelativeVelocity = MathUtilities.ProjectOnPlane(characterBody.RelativeVelocity, characterBody.GroundingUp)
                         + verticalVelocity; //.y = 0;
 
+                    
+
                     characterControl.FloatingFuel = characterComponent.MaxClimbFuel;
                     characterComponent.AirJumpedCount = 0;
                     characterComponent.WallSlideTime += deltaTime;
 
                     if (/*characterControl.LastJumpPressedTime < 10 &&*/ characterControl.Jump)//characterControl.Jump)
                     {
-                        CharacterControlUtilities.StandardJump(ref characterBody, 
-                           math.normalizesafe(characterComponent.WallNormal / math.max(characterComponent.ContactCount, 1)) * characterComponent.WallJumpSpeed ,
-                            true, characterBody.GroundingUp);
+                        //CharacterControlUtilities.StandardJump(ref characterBody, 
+                        //   math.normalizesafe(characterComponent.WallNormal / math.max(characterComponent.ContactCount, 1)) * characterComponent.WallJumpSpeed ,
+                        //    true, characterComponent.WallNormal //characterBody.GroundingUp
+                        //    );
+                        Jumping(true, ref characterBody,  characterComponent.WallJumpSpeed / math.max(characterComponent.ContactCount, 1), /*characterControl.MoveVector*/
+                           math.lengthsq(characterControl.MoveVector) > 0.1f ?
+                           math.normalizesafe(math.reflect(characterControl.MoveVector, characterComponent.WallNormal) + characterBody.GroundingUp) :
+                           math.normalizesafe( characterComponent.WallNormal + characterBody.GroundingUp) , characterComponent.WallNormal
+                            , characterComponent.AirMaxSpeed);
                         characterControl.Jump = false;
                         characterComponent.LastWallNormal = characterComponent.WallNormal;
+                        characterComponent.WallNormal = 
                         characterComponent.WallSlideTime = 0;
                     }
                     characterComponent.ContactCount = 0;
@@ -250,7 +262,8 @@ namespace ImaginaryReactor
 
                     if (characterControl.Jump && characterComponent.AirJump > characterComponent.AirJumpedCount)
                     {
-                        Jumping(characterComponent.IgnoreInertiaWhenJump, ref characterBody, characterComponent.JumpSpeed, characterControl.MoveVector * characterComponent.AirMaxSpeed);
+                        Jumping(characterComponent.IgnoreInertiaWhenJump, ref characterBody, characterComponent.JumpSpeed, characterControl.MoveVector
+                            , characterBody.GroundingUp, characterComponent.AirMaxSpeed);
                         characterControl.Jump = false;
                         characterComponent.AirJumpedCount++;
                     }

@@ -167,6 +167,13 @@ namespace ImaginaryReactor
                     }
                 }
 
+                foreach (var (line,entity) in SystemAPI.Query<HitscanLineComponent>().WithNone<ModelSyncComponent>().WithEntityAccess())
+                {
+                    var lineComponent = SystemAPI.GetComponent<HitscanLineComponent>(entity);
+                    manager.PushLine(lineComponent.StartPos, lineComponent.EndPos);
+                    ecb.DestroyEntity(entity);
+                }
+
                 //foreach(var (tag, entity) in SystemAPI.Query<CancelVaulting>().WithEntityAccess())
                 //{
                 //    ecb.RemoveComponent<CancelVaulting>(entity);

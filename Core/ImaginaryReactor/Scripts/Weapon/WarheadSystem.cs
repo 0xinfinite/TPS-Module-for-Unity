@@ -5,17 +5,35 @@ using Unity.Jobs;
 using Unity.Collections;
 using Unity.Physics.Systems;
 using Unity.Physics.Extensions;
-using Unity.Burst.CompilerServices;
 using Unity.Mathematics;
 using Unity.Transforms;
+using Codice.CM.Client.Differences;
+using static UnityEditor.Experimental.GraphView.Port;
 
 namespace ImaginaryReactor {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct WarheadSystem : ISystem
     {
+      
+
+        public static void Ignition(Warhead warhead, Entity warheadEntity, Entity targetEntity, ref EntityCommandBuffer ecb,
+            ComponentLookup<TriggedWarheadData> FiredWarheadDataLookup, ComponentLookup<LocalToWorld> LTWLookup,
+            float3 forcePosition, float3 forceNormal)
+        {
+            var hasFiredData = FiredWarheadDataLookup.HasComponent(warheadEntity);
+            ecb.AddComponent(targetEntity, new Energy()
+            {
+                SourcePosition = hasFiredData ? FiredWarheadDataLookup[warheadEntity].FiredPosition : 
+                LTWLookup[warheadEntity].Position - LTWLookup[warheadEntity].Forward * 100f,
+                ForcePosition = forcePosition,
+                ForceNormalPhysically = forceNormal* warhead.Fragment.RigidbodyPushForce,
+                ForceNormal = hasFiredData ? FiredWarheadDataLookup[warheadEntity].WarheadForward : LTWLookup[warheadEntity].Forward,
+                ForceAmount = warhead.Fragment.EnergyAmount
+            });
+        }
 
         //private EndSimulationEntityCommandBufferSystem endECBSystem;
-        //public ComponentLookup<Warhead> _WarheadLookUp;
+        //public ComponentLookup<Warhead> _WarheadLookup;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
@@ -32,15 +50,20 @@ namespace ImaginaryReactor {
             var physicsWorldSingleton = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
             var _ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);//state.World.GetOrCreateSystemManaged<BeginSimulationEntityCommandBufferSystem>().CreateCommandBuffer();
 
+            //foreach (var (delayedWarhead, ltw) in SystemAPI.Query<Warhead, LocalToWorld>()
+            //    .WithAll<Warhead,  LocalToWorld>())
+            //{
+
+            //}
 
             //state.Dependency = new WarheadJob()
-            var warheadJob = new WarheadJob
+            var warheadJob = new WarheadCollisionJob
             {
-                WarheadLookUp = state.GetComponentLookup<Warhead>(false),// _WarheadLookUp,
-                FiredWarheadDataLookUp = state.GetComponentLookup<TriggedWarheadData>(true),
-                LTWLookUp = state.GetComponentLookup<LocalToWorld>(false),
-                MagicIFF_LookUp = state.GetComponentLookup<MagicIFF>(false),
-                HitboxLookUp = state.GetComponentLookup<Hitbox>(false),
+                WarheadLookup = state.GetComponentLookup<Warhead>(false),// _WarheadLookup,
+                FiredWarheadDataLookup = state.GetComponentLookup<TriggedWarheadData>(true),
+                LTWLookup = state.GetComponentLookup<LocalToWorld>(false),
+                MagicIFF_Lookup = state.GetComponentLookup<MagicIFF>(false),
+                HitboxLookup = state.GetComponentLookup<Hitbox>(false),
                 PhysicsWorldSingleton = physicsWorldSingleton,// PhysicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
                 ecb = _ecb,
                 entityManager = state.EntityManager
@@ -51,18 +74,14 @@ namespace ImaginaryReactor {
 
         }
         [BurstCompile]
-    public partial struct WarheadJob : ICollisionEventsJob//ITriggerEventsJob
+    public partial struct WarheadCollisionJob : ICollisionEventsJob//ITriggerEventsJob
         {
-            public ComponentLookup<Warhead> WarheadLookUp;
+            public ComponentLookup<Warhead> WarheadLookup;
             [ReadOnly]
-            public ComponentLookup<TriggedWarheadData> FiredWarheadDataLookUp;
-            public ComponentLookup<LocalToWorld> LTWLookUp;
-            public ComponentLookup<MagicIFF> MagicIFF_LookUp;
-            public ComponentLookup<Hitbox> HitboxLookUp;
-            /*[ReadOnly] */
-            //public BuildPhysicsWorld BuildPhysilcsWorld;
-            //public PhysicsWorld PhysicsWorld;
-            /*[ReadOnly]*/
+            public ComponentLookup<TriggedWarheadData> FiredWarheadDataLookup;
+            public ComponentLookup<LocalToWorld> LTWLookup;
+            public ComponentLookup<MagicIFF> MagicIFF_Lookup;
+            public ComponentLookup<Hitbox> HitboxLookup;
             public PhysicsWorldSingleton PhysicsWorldSingleton;
             public EntityCommandBuffer ecb;
             public EntityManager entityManager;
@@ -74,8 +93,8 @@ namespace ImaginaryReactor {
                 var entityA = collisionEvent.EntityA;
                 var entityB = collisionEvent.EntityB;
 
-                var isEntityAWarhead = WarheadLookUp.HasComponent(entityA);
-                var isEntityBWarhead = WarheadLookUp.HasComponent(entityB);
+                var isEntityAWarhead = WarheadLookup.HasComponent(entityA);
+                var isEntityBWarhead = WarheadLookup.HasComponent(entityB);
 
                 if (isEntityAWarhead && isEntityBWarhead) {
                     ecb.DestroyEntity(entityA);
@@ -88,7 +107,7 @@ namespace ImaginaryReactor {
                 //bool ignoreThis = false;
                 if (isEntityAWarhead)
                 {
-                    if (WarheadLookUp.TryGetComponent(entityA, out Warhead warhead))
+                    if (WarheadLookup.TryGetComponent(entityA, out Warhead warhead))
                     {
                         if (entityManager.HasBuffer<IgnoreHitboxData>(entityA))
                         {
@@ -99,17 +118,10 @@ namespace ImaginaryReactor {
                                 if (buffer[i].hitboxEntity == entityB)
                                 {
                                     return;
-                                    //ignoreThis = true;
-                                    //break;
                                 }
                             }
                         }
-                        //if (ignoreThis)
-                        //{
-                        //    return;
-                        //}
-
-                        if (warhead.ImpactParticle != Entity.Null)// && LTWLookUp.TryGetComponent(entityA, out LocalToWorld ltw))
+                        if (warhead.ImpactParticle != Entity.Null)// && LTWLookup.TryGetComponent(entityA, out LocalToWorld ltw))
                         {
                             Entity impactParticle = ecb.Instantiate(warhead.ImpactParticle);
                             ecb.SetComponent(impactParticle, new LocalTransform()
@@ -120,38 +132,35 @@ namespace ImaginaryReactor {
                             }
                             );
                         }
-
                         bool hostile = true;
-
-                        if (HitboxLookUp.TryGetComponent(entityB, out Hitbox hitbox) && MagicIFF_LookUp.TryGetComponent(entityA, out MagicIFF iff) && hitbox.IFF_Key == iff.Key)
+                        if (HitboxLookup.TryGetComponent(entityB, out Hitbox hitbox) && MagicIFF_Lookup.TryGetComponent(entityA, out MagicIFF iff) && hitbox.IFF_Key == iff.Key)
                         {
                             hostile = false;
                         }
-
-                        //UnityEngine.Debug.Log(hitbox.IFF_Key + " VS " + iff.Key);
-
                         if (hostile)
                         {
-                            var hasFiredData = FiredWarheadDataLookUp.HasComponent(entityA);
-                            ecb.AddComponent(entityB, new Energy()
-                            {
-                                SourcePosition = hasFiredData ? FiredWarheadDataLookUp[entityA].FiredPosition : LTWLookUp[entityA].Position - LTWLookUp[entityA].Forward * 100f,
-                                ForcePosition = detail.AverageContactPointPosition,
-                                ForceNormalPhysically = -collisionEvent.Normal * warhead.FragmentForce,
-                                ForceNormal = hasFiredData ? FiredWarheadDataLookUp[entityA].WarheadForward : LTWLookUp[entityA].Forward,
-                                ForceAmount = warhead.FragmentDamage
-                            });
+
+                            Ignition(warhead, entityA, entityB, ref ecb, FiredWarheadDataLookup, LTWLookup,
+                                detail.AverageContactPointPosition, -collisionEvent.Normal);
+
+
+                            //var hasFiredData = FiredWarheadDataLookup.HasComponent(entityA);
+                            //ecb.AddComponent(entityB, new Energy()
+                            //{
+                            //    SourcePosition = hasFiredData ? FiredWarheadDataLookup[entityA].FiredPosition : LTWLookup[entityA].Position - LTWLookup[entityA].Forward * 100f,
+                            //    ForcePosition = detail.AverageContactPointPosition,
+                            //    ForceNormalPhysically = -collisionEvent.Normal * warhead.FragmentForce,
+                            //    ForceNormal = hasFiredData ? FiredWarheadDataLookup[entityA].WarheadForward : LTWLookup[entityA].Forward,
+                            //    ForceAmount = warhead.Damage
+                            //});
                         }
-                        //PhysicsWorldSingleton.PhysicsWorld.ApplyImpulse(PhysicsWorldSingleton.PhysicsWorld.GetRigidBodyIndex(entityB),
-                        //-collisionEvent.Normal * detail.EstimatedImpulse,  detail.AverageContactPointPosition);
                     }
-                    //UnityEngine.Debug.Log("A has warhead");
                     ecb.DestroyEntity(entityA);
                 }
                 else if (isEntityBWarhead)
                 {
                     //UnityEngine.Debug.Log("B has warhead");
-                    if (WarheadLookUp.TryGetComponent(entityB, out Warhead warhead))
+                    if (WarheadLookup.TryGetComponent(entityB, out Warhead warhead))
                     {
                         if (entityManager.HasBuffer<IgnoreHitboxData>(entityB))
                         {
@@ -172,7 +181,7 @@ namespace ImaginaryReactor {
                         //    return;
                         //}
 
-                        if (warhead.ImpactParticle != Entity.Null)// && LTWLookUp.TryGetComponent(entityB, out LocalToWorld ltw))
+                        if (warhead.ImpactParticle != Entity.Null)// && LTWLookup.TryGetComponent(entityB, out LocalToWorld ltw))
                         {
                             Entity impactParticle = ecb.Instantiate(warhead.ImpactParticle);
                             ecb.SetComponent(impactParticle, new LocalTransform()
@@ -186,7 +195,7 @@ namespace ImaginaryReactor {
 
                         bool hostile = true;
 
-                        if (HitboxLookUp.TryGetComponent(entityA, out Hitbox hitbox) && MagicIFF_LookUp.TryGetComponent(entityB, out MagicIFF iff) && hitbox.IFF_Key == iff.Key)
+                        if (HitboxLookup.TryGetComponent(entityA, out Hitbox hitbox) && MagicIFF_Lookup.TryGetComponent(entityB, out MagicIFF iff) && hitbox.IFF_Key == iff.Key)
                         {
                             hostile = false;
                         }
@@ -194,15 +203,10 @@ namespace ImaginaryReactor {
 
                         if (hostile)
                         {
-                            var hasFiredData = FiredWarheadDataLookUp.HasComponent(entityB);
-                            ecb.AddComponent(entityA, new Energy()
-                            {
-                                SourcePosition = hasFiredData ? FiredWarheadDataLookUp[entityB].FiredPosition : LTWLookUp[entityB].Position - LTWLookUp[entityB].Forward * 100f,
-                                ForcePosition = detail.AverageContactPointPosition,
-                                ForceNormalPhysically = -collisionEvent.Normal * warhead.FragmentForce,
-                                ForceNormal = hasFiredData ? FiredWarheadDataLookUp[entityB].WarheadForward : LTWLookUp[entityB].Forward,
-                                ForceAmount = warhead.FragmentDamage
-                            });
+                            Ignition(warhead, entityB, entityA, ref ecb, FiredWarheadDataLookup, LTWLookup,
+                                detail.AverageContactPointPosition, -collisionEvent.Normal);
+
+                           
                         }
                         //PhysicsWorldSingleton.PhysicsWorld.ApplyImpulse(PhysicsWorldSingleton.PhysicsWorld.GetRigidBodyIndex(entityA),
                         //    -collisionEvent.Normal * detail.EstimatedImpulse,  detail.AverageContactPointPosition);

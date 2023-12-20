@@ -11,13 +11,13 @@ namespace ImaginaryReactor {
     public partial struct /*HitboxSystem*/SeperatedChildSystem : ISystem
     {
         //public EntityCommandBuffer _ecb;
-        //ComponentLookup<LocalToWorld> _LTWLookUp;
+        //ComponentLookup<LocalToWorld> _LTWLookup;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>();
-            //_LTWLookUp = state.GetComponentLookup<LocalToWorld>(false);
+            //_LTWLookup = state.GetComponentLookup<LocalToWorld>(false);
             //_ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
         }
 
@@ -30,7 +30,7 @@ namespace ImaginaryReactor {
 
             ChildJob job = new ChildJob
             {
-                LTWLookUp = state.GetComponentLookup<LocalToWorld>(false)//_LTWLookUp
+                LTWLookup = state.GetComponentLookup<LocalToWorld>(false)//_LTWLookup
                                                                          //ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged) //_ecb//SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged),
             };
             //job.Schedule();
@@ -44,7 +44,7 @@ namespace ImaginaryReactor {
             //public float DeltaTime;
             //public PhysicsWorld PhysicsWorld;
             //public EntityCommandBuffer ecb;
-            public ComponentLookup<LocalToWorld> LTWLookUp;
+            public ComponentLookup<LocalToWorld> LTWLookup;
 
             void Execute(
                 Entity entity,
@@ -57,7 +57,7 @@ namespace ImaginaryReactor {
                 )
             {
                 //ltw.Value = 
-                if (LTWLookUp.TryGetComponent(child.Parent, out LocalToWorld parentLTW))
+                if (LTWLookup.TryGetComponent(child.Parent, out LocalToWorld parentLTW))
                 {
                     //UnityEngine.Debug.Log("Parenting");
                     //transform.Position = child.LocalPosition;

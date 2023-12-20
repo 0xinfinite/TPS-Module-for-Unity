@@ -60,7 +60,7 @@ namespace ImaginaryReactor {
         HitboxRemoveJob removeJob = new HitboxRemoveJob
         {
             ecb = _ecb,
-            HealthLookUp = state.GetComponentLookup<Health>(),
+            HealthLookup = state.GetComponentLookup<Health>(),
         };
 
         state.Dependency = removeJob.Schedule(state.Dependency);
@@ -122,7 +122,7 @@ namespace ImaginaryReactor {
             {
                 //public float DeltaTime;
                 //public PhysicsWorld PhysicsWorld;
-                public ComponentLookup<Health> HealthLookUp;
+                public ComponentLookup<Health> HealthLookup;
                 public EntityCommandBuffer ecb;
 
                 void Execute(
@@ -133,7 +133,7 @@ namespace ImaginaryReactor {
                                     //in DynamicBuffer<WeaponIgnoredEntityBufferElement> ignoredEntitiesBuffer
                     )
                 {
-                    if (!HealthLookUp.TryGetComponent(hitbox.Owner, out Health health))
+                    if (!HealthLookup.TryGetComponent(hitbox.Owner, out Health health))
                     {
                         ecb.RemoveComponent<PhysicsCollider>(entity);
                     }

@@ -45,6 +45,14 @@ namespace ImaginaryReactor {
             {
                 playerInputs.ValueRW.FirePressed.Set(fixedTick); 
             }
+                if (Input.GetMouseButtonDown(2))
+                {
+                    playerInputs.ValueRW.ThrowPress.Set(fixedTick);
+                }
+                if (Input.GetMouseButtonUp(2))
+                {
+                    playerInputs.ValueRW.ThrowRelease.Set(fixedTick);
+                }
             if (Input.GetKeyDown(KeyCode.F))
             {
                 playerInputs.ValueRW.InteractPressed.Set(fixedTick);
@@ -175,6 +183,10 @@ namespace ImaginaryReactor {
 
                             bool trigged = playerInputs.ValueRW.FirePressed.IsSet(fixedTick);
                             characterControl.Fire = trigged;
+
+                    characterControl.ThrowPress = playerInputs.ValueRW.ThrowPress.IsSet(fixedTick);
+                    characterControl.ThrowRelease = playerInputs.ValueRW.ThrowRelease.IsSet(fixedTick);
+
                             //if (hasWeapon)
                             //{
                             //    Weapon weapon = SystemAPI.GetComponent<Weapon>(player.ControlledWeapon);

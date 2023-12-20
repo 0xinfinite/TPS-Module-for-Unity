@@ -25,6 +25,8 @@ namespace ImaginaryReactor
         public FixedInputEvent SwitchViewPressed;
         public FixedInputEvent FirePressed;
         public FixedInputEvent InteractPressed;
+        public FixedInputEvent ThrowPress;
+        public FixedInputEvent ThrowRelease;
     }
 
     public struct PlayerTag : IComponentData

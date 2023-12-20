@@ -10,30 +10,62 @@ namespace ImaginaryReactor
     [Serializable]
     public struct Warhead : IComponentData
     {
-        public BulletType DamageType;
-        public Entity Fragment;
+        //public BulletType DamageType;
+        public Bullet Fragment;
         public Entity ImpactParticle;
+        //public float EffectRange;
+        //public float Damage;
         public int FragmentCount;
         public float FragmentSpread;
-        public float FragmentRange;
-        public float FragmentDamage;
-        public float FragmentForce;
+        //public float FragmentForce;
         //public ColliderKey MagicIFF_Key;
 
 
-        public static Warhead GetDefault()
-        {
-            Warhead w = new Warhead()
-            {
-                FragmentCount = 1,
-                FragmentSpread = 0,
-                FragmentDamage = 100f,
-                FragmentForce = 100f,
-            };
+        //public static Warhead GetDefault()
+        //{
+        //    Warhead w = new Warhead()
+        //    {
+        //        FragmentCount = 1,
+        //        FragmentSpread = 0,
+        //        //Damage = 100f,
+        //        //FragmentForce = 100f,
+        //        //EffectRange = 10f
+        //    };
 
-            return w;
-        }
+        //    return w;
+        //}
     }
+
+    //public struct DelayedWarhead : IComponentData
+    //{
+    //    public BulletType DamageType;
+    //    public Bullet Fragment;
+    //    public Entity ImpactParticle;
+    //    //public float EffectRange;
+    //    //public float Damage;
+    //    public int FragmentCount;
+    //    public float FragmentSpread;
+    //    //public float FragmentForce;
+    //    public float RemainTime;
+    //    public Entity LinkedCharacter;
+    //    //public ColliderKey MagicIFF_Key;
+
+
+    //    //public static DelayedWarhead GetDefault()
+    //    //{
+    //    //    DelayedWarhead w = new DelayedWarhead()
+    //    //    {
+    //    //        FragmentCount = 1,
+    //    //        FragmentSpread = 0,
+    //    //        //Damage = 100f,
+    //    //        //FragmentForce = 100f,
+    //    //        //EffectRange = 10f,
+    //    //        RemainTime = 3
+    //    //    };
+
+    //    //    return w;
+    //    //}
+    //}
 
     public struct TriggedWarheadData : IComponentData
     {

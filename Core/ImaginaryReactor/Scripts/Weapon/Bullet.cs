@@ -16,6 +16,7 @@ namespace ImaginaryReactor
         public CollisionFilter HitscanFilter;
         public float HitscanRange;
         public float SphereRadius;
+        public CollisionFilter ShapeFilter;
         public Entity ProjectileEntity;
         public float ProjectileSpeed;
         public Entity ImpactParticleEntity;
@@ -33,6 +34,7 @@ namespace ImaginaryReactor
                 BulletType = BulletType.Hitscan,
                 HitscanType = HitscanType.SingleRay,
                 HitscanFilter = CollisionFilter.Default,
+                ShapeFilter = CollisionFilter.Default,
                 ProjectileSpeed = 100f,
                 HitscanRange = 100f,
                 SphereRadius = 0.01f,

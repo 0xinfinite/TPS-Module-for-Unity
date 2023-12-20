@@ -26,12 +26,12 @@ public struct SeekerCastObstructionHitsCollector : ICollector<ColliderCastHit>
     private DynamicBuffer<IgnoreHitboxData> _ignoredEntitiesBuffer;
     private ColliderKey _targetKey;
     //[ReadOnly]
-    //private ComponentLookup<MagicIFF> _iffLookUp;
+    //private ComponentLookup<MagicIFF> _iffLookup;
     public NativeArray<ColliderCastHit> Hits;
     //private int currentIndex;
 
     public SeekerCastObstructionHitsCollector(//Entity followedCharacter,
-        DynamicBuffer<IgnoreHitboxData> ignoredEntitiesBuffer, ColliderKey targetKey, //ComponentLookup<MagicIFF> iffLookUp, 
+        DynamicBuffer<IgnoreHitboxData> ignoredEntitiesBuffer, ColliderKey targetKey, //ComponentLookup<MagicIFF> iffLookup, 
         int capacity = 1)
     {
         NumHits = 0;
@@ -40,7 +40,7 @@ public struct SeekerCastObstructionHitsCollector : ICollector<ColliderCastHit>
         //_followedCharacter = followedCharacter;
         _ignoredEntitiesBuffer = ignoredEntitiesBuffer;
         _targetKey= targetKey;
-       // _iffLookUp = iffLookUp;
+       // _iffLookup = iffLookup;
 
         Hits = new NativeArray<ColliderCastHit>(capacity, Allocator.Temp);
         //currentIndex = 0;
@@ -66,9 +66,9 @@ public struct SeekerCastObstructionHitsCollector : ICollector<ColliderCastHit>
                 return false;
             }
         }
-        //if (_iffLookUp.HasComponent(hit.Entity))
+        //if (_iffLookup.HasComponent(hit.Entity))
         //{
-        //    if (_iffLookUp[hit.Entity].Key//hit.Material.CustomTags 
+        //    if (_iffLookup[hit.Entity].Key//hit.Material.CustomTags 
         //            == _targetKey.Value)
         //    {
         //        bool reachedEnd = NumHits + 1 >= Hits.Length;
