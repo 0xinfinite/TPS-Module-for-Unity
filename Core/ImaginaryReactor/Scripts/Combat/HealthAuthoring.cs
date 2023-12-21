@@ -17,6 +17,7 @@ namespace ImaginaryReactor
                 Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
                 AddComponent(entity, new Health() { RemainHealth = authoring.InitHealth });
+                DynamicBuffer<StackedEnergy> energyBuffer = AddBuffer<StackedEnergy>();
 
                 DynamicBuffer<IgnoreHitboxData> ignoreBuffer = AddBuffer<IgnoreHitboxData>(entity);
                 for (int i = 0; i < authoring.myHitboxList.Length; i++)

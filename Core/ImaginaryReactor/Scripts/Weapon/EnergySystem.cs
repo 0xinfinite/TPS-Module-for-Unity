@@ -30,31 +30,55 @@ namespace ImaginaryReactor {
             var ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             foreach (var (energy, mass, velocity) in SystemAPI.Query<Energy, PhysicsMass, RefRW<PhysicsVelocity>>().WithAll<Energy, PhysicsMass, PhysicsVelocity>())
             {
-                float3 impulse = energy.ForceNormal * energy.ForceAmount;
+                float3 impulse = energy.ForceNormal * energy.BaseDamage;
                 velocity.ValueRW.ApplyImpulse(in mass, in mass.Transform.pos, in mass.Transform.rot, in impulse, in energy.ForcePosition);
             }
             foreach (var (energy, hitbox) in SystemAPI.Query<Energy, Hitbox>().WithAll<Energy, Hitbox>())
             {
                 if (SystemAPI.HasComponent<Health>(hitbox.Owner))
                 {
-                    if (SystemAPI.HasComponent<Energy>(hitbox.Owner))
-                    {
-                        var energyOnOwner = SystemAPI.GetComponent<Energy>(hitbox.Owner);
+                    var appliedEnergy = energy;
+                    //var damage = 
+                    appliedEnergy.BaseDamage =
+                    hitbox.IsCritical ?
+                        appliedEnergy.CriticalDamage * hitbox.DamageMultiply
+                        : appliedEnergy.BaseDamage * hitbox.DamageMultiply;
 
-                        if(energyOnOwner.ForceAmount < energy.ForceAmount)
-                        {
-                            ecb.SetComponent(hitbox.Owner, energy);
-                        }
+                    //if (SystemAPI.HasBuffer<StackedEnergy>(hitbox.Owner))
+                    //{
+                    //    ecb.AddBuffer<StackedEnergy>(hitbox.Owner); 
+                    //}
+                        var stackedEnergy = SystemAPI.GetBuffer<StackedEnergy>(hitbox.Owner);//ecb.AddBuffer<>(entity)
+                        stackedEnergy.Add(new StackedEnergy() { Energy = appliedEnergy });
+                    //}
+                    //else
+                    //{
+                    //    ecb.AddBuffer<StackedEnergy>(hitbox.Owner);
+                    //}
+                    //if (SystemAPI.HasComponent<Energy>(hitbox.Owner))
+                    //{
+                    //    var energyOnOwner = SystemAPI.GetComponent<Energy>(hitbox.Owner);
 
-                    }
-                    else
-                    {
-                        ecb.AddComponent(hitbox.Owner, energy);
-                    }
+                    //    if(energyOnOwner.BaseDamage < appliedEnergy.BaseDamage)//damage)
+                    //    {
+                    //        UnityEngine.Debug.Log("override damage");
+                    //        //                            appliedEnergy.BaseDamage = damage;
+                    //        ecb.SetComponent(hitbox.Owner, appliedEnergy);
+                    //    }
+                    //    else
+                    //    {
+                    //        UnityEngine.Debug.Log("filter energy");
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    UnityEngine.Debug.Log("apply damage first time");
+                    //    ecb.AddComponent(hitbox.Owner, appliedEnergy);
+                    //}
                     //UnityEngine.Debug.Log(hitbox.Owner.Index+"said Ouch");
-                    //health.ValueRW.RemainHealth -= energy.ForceAmount;
+                    //health.ValueRW.RemainHealth -= energy.BaseDamage;
                     //Health health = SystemAPI.GetComponent<Health>(hitbox.Owner);
-                    //health.RemainHealth -= energy.ForceAmount;
+                    //health.RemainHealth -= energy.BaseDamage;
                     //SystemAPI.SetComponent(hitbox.Owner, health);
 
                     //if (SystemAPI.HasComponent<PlayerTag>(hitbox.Owner))
@@ -62,18 +86,34 @@ namespace ImaginaryReactor {
                     //    ecb.AddComponent(hitbox.Owner, new TrackInfo()
                     //    {
                     //        IsDirection = true,    //false,
-                    //        LastKnownVector = energy.SourcePosition, //energy.ForceNormal * energy.ForceAmount
-                    //        DamageAmount = energy.ForceAmount
+                    //        LastKnownVector = energy.SourcePosition, //energy.ForceNormal * energy.BaseDamage
+                    //        DamageAmount = energy.BaseDamage
                     //    });
                     //}
                 }
             }
-            foreach (var (energy, health,entity) in SystemAPI.Query<Energy, RefRW<Health>>().WithAll<Energy, Health>().WithEntityAccess())
+            foreach (var (/*energy,*/ health,entity) in SystemAPI.Query</*Energy,*/ RefRW<Health>>().WithAll</*Energy,*/ Health>().WithEntityAccess())
             {
-                    //UnityEngine.Debug.Log(hitbox.ValueRO.Owner.Index+"said Ouch");
-                    //health.ValueRW.RemainHealth -= energy.ForceAmount;
-                    
-                    health.ValueRW.RemainHealth -= energy.ForceAmount;
+                //UnityEngine.Debug.Log(hitbox.ValueRO.Owner.Index+"said Ouch");
+                //health.ValueRW.RemainHealth -= energy.BaseDamage;
+                if (!SystemAPI.HasBuffer<StackedEnergy>(entity))
+                    continue;
+
+                var stackedEnergy = SystemAPI.GetBuffer<StackedEnergy>(entity);
+
+                if (stackedEnergy.Length <= 0) continue;
+
+                var energy = stackedEnergy[0].Energy;
+                for (int i = 1; i < stackedEnergy.Length; ++i)
+                {
+                    if(energy.BaseDamage < stackedEnergy[i].Energy.BaseDamage)
+                    {
+                        energy = stackedEnergy[i].Energy;
+                    }
+                }
+                stackedEnergy.Clear();
+
+                    health.ValueRW.RemainHealth -= energy.BaseDamage;
                     
 
                     if (SystemAPI.HasComponent<PlayerTag>(entity))
@@ -82,8 +122,8 @@ namespace ImaginaryReactor {
                         ecb.AddComponent(entity, new TrackInfo()
                         {
                             IsDirection = true,    //false,
-                            LastKnownVector = energy.SourcePosition, //energy.ForceNormal * energy.ForceAmount
-                            DamageAmount = energy.ForceAmount
+                            LastKnownVector = energy.SourcePosition, //energy.ForceNormal * energy.BaseDamage
+                            DamageAmount = energy.BaseDamage
                         });
                     }
                 
@@ -97,7 +137,7 @@ namespace ImaginaryReactor {
             //foreach (var (energy, health) in SystemAPI.Query<Energy,  RefRW<Health>>().WithAll<Energy, Health>())
             //{
             //    //UnityEngine.Debug.Log("Losing Health");
-            //    health.ValueRW.RemainHealth -= energy.ForceAmount;
+            //    health.ValueRW.RemainHealth -= energy.BaseDamage;
             //}
 
             EnergyJob job = new EnergyJob

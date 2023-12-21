@@ -26,6 +26,7 @@ namespace ImaginaryReactor
         public PhysicsMaterialProperties physicsMaterial;
         public CollisionFilter hitscanFilter;
         public bool detonateWhenContact = true;
+        public float criticalMultiply = 2;
 
         public class Baker : Baker<WarheadAuthoring>
         {
@@ -55,7 +56,7 @@ namespace ImaginaryReactor
                             LoudSoundRange = authoring.loudSoundRange,
                             RigidbodyPushForce = authoring.rigidbodyPushForce,
                             MagicIFF_Key = authoring.physicsMaterial.CustomTags.Value,
-
+                            CriticalMultiply = authoring.criticalMultiply
                         },
                         
                         ImpactParticle = GetEntity(authoring.impactParticle, TransformUsageFlags.Dynamic),

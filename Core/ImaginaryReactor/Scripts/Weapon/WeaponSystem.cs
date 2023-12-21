@@ -298,7 +298,9 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
                                         ForcePosition = hit.Position,
                                         ForceNormal = hit.SurfaceNormal,
                                         ForceNormalPhysically = hit.SurfaceNormal,
-                                        ForceAmount = warhead.Fragment.EnergyAmount
+                                        BaseDamage = warhead.Fragment.EnergyAmount,
+                                        //ApplyCritical = false
+                                        CriticalDamage = warhead.Fragment.EnergyAmount
                                     });
                                 }
                             }
@@ -348,7 +350,7 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
         //                        ForcePosition = hit.Position,
         //                        ForceNormal = hit.SurfaceNormal,
         //                        ForceNormalPhysically = hit.SurfaceNormal,
-        //                        ForceAmount = warhead.Fragment.EnergyAmount
+        //                        BaseDamage = warhead.Fragment.EnergyAmount
         //                    });
         //                }
         //            }
@@ -500,7 +502,8 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
                                 ForcePosition = collector.ClosestHit.Position,
                                 ForceNormal = rayDir,
                                 ForceNormalPhysically = collector.ClosestHit.SurfaceNormal,
-                                ForceAmount = bullet.EnergyAmount
+                                BaseDamage = bullet.EnergyAmount,
+                                CriticalDamage = bullet.EnergyAmount * bullet.CriticalMultiply  //ApplyCritical = true
                             });
 
 
@@ -550,7 +553,7 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
                 {
                     FiredPosition = rayStart,
                     WarheadForward = rayDir,
-                    WarheadForceAmount = bullet.EnergyAmount
+                    WarheadBaseDamage = bullet.EnergyAmount
                 });
                 var bufferOnProjectile = ecb.AddBuffer<IgnoreHitboxData>(projectile);
                 for (int j = 0; j < buffer.Length; ++j)

@@ -11,14 +11,14 @@ namespace ImaginaryReactor {
     [BurstCompile]
     public partial  struct ThirdPersonAIInputsSystem : ISystem
 {
-    [BurstCompile]
-    public static void GetActualPositionOfHitbox(ref LocalToWorld ltw, ref Hitbox hitbox, ref float3 pos)
-    {
-        pos = ltw.Position - ltw.Forward * hitbox.Center.z - ltw.Right * hitbox.Center.x
-            - ltw.Up * hitbox.Center.z;
-    }
+        [BurstCompile]
+        void GetActualPositionOfHitbox(in LocalToWorld ltw, ref Hitbox hitbox, ref float3 pos)
+        {
+            pos = ltw.Position - ltw.Forward * hitbox.Center.z - ltw.Right * hitbox.Center.x
+                - ltw.Up * hitbox.Center.z;
+        }
 
-    [BurstCompile]
+        [BurstCompile]
     void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<FixedTickSystem.Singleton>();
@@ -98,15 +98,15 @@ namespace ImaginaryReactor {
             ////UnityEngine.Debug.Log("is this hostile : " + hostile);
             //if (hostile && state.GetComponentLookup<LocalToWorld>().TryGetComponent(tp.ControlledCharacter, out var localToWorld))
             //{
-            if (SystemAPI.HasComponent<LocalToWorld>(tracking.ValueRO.TargetEntity))
+            if (SystemAPI.HasComponent<LocalToWorld>(tracking.ValueRW.TargetEntity))
             {
                 float3 pos = float3.zero;
-                var targetLTW = SystemAPI.GetComponent<LocalToWorld>(tracking.ValueRO.TargetEntity);
+                var targetLTW = SystemAPI.GetComponent<LocalToWorld>(tracking.ValueRW.TargetEntity);
                 if (SystemAPI.HasComponent<Hitbox>(tracking.ValueRO.TargetEntity))
                 {
-                    var hitbox = SystemAPI.GetComponent<Hitbox>(tracking.ValueRO.TargetEntity);
+                    var hitbox = SystemAPI.GetComponent<Hitbox>(tracking.ValueRW.TargetEntity);
                     //UnityEngine.Debug.Log("Tracking Target has Hitbox");
-                    GetActualPositionOfHitbox(ref targetLTW, ref hitbox, ref pos);
+                    GetActualPositionOfHitbox(targetLTW, ref hitbox, ref pos);
                 }
                 else
                 {

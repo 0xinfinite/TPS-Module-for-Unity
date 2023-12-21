@@ -74,7 +74,7 @@ namespace ImaginaryReactor
     {
         public float3 FiredPosition;
         public float3 WarheadForward;
-        public float WarheadForceAmount;
+        public float WarheadBaseDamage;
 
     }
 }

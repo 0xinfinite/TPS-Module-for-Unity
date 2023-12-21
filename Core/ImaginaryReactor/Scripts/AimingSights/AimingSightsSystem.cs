@@ -85,7 +85,8 @@ namespace ImaginaryReactor
 
                         float range = 100f;
 
-                        float3 rayStart = targetCameraEntityLocalToWorld.Position + targetCameraEntityLocalToWorld.Forward * math.distance(targetCameraEntityLocalToWorld.Position, muzzleLocalToWorld.Position);
+                        float3 rayStart = targetCameraEntityLocalToWorld.Position + 
+                            targetCameraEntityLocalToWorld.Forward * math.max( math.distance(targetCameraEntityLocalToWorld.Position, muzzleLocalToWorld.Position),1);
                         RaycastInput ray = new RaycastInput()
                         {
                             Start = rayStart,

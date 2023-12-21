@@ -30,6 +30,7 @@ namespace ImaginaryReactor
         public float loudSoundRange = 200f;
         public int bulletCount = 1;
         public float bulletSpread = 0;
+        public float criticalMultiply = 2;
         //public GameObject[] ignoreHitboxes;
 
         public class Baker : Baker<WeaponAuthoring>
@@ -69,6 +70,7 @@ namespace ImaginaryReactor
                             LoudSoundRange = authoring.loudSoundRange,
                             RigidbodyPushForce = authoring.rigidbodyPushForce,
                             MagicIFF_Key = authoring.physicsMaterial.CustomTags.Value,
+                            CriticalMultiply = authoring.criticalMultiply
                         },
                         BulletCount = authoring.bulletCount,
                         BulletSpread = authoring.bulletSpread,

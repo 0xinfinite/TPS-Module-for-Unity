@@ -11,6 +11,8 @@ namespace ImaginaryReactor
         public GameObject OwnerGO;
         public CustomPhysicsMaterialTags IFF_Key;
         public int ID;
+        public bool IsCriticalPart;
+        public float damageMultiplier = 1;
 
         public class Baker : Baker<ComplexHitboxAuthoring>
         {
@@ -23,7 +25,9 @@ namespace ImaginaryReactor
                 {
                     Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic),
                     Center = HitboxAuthoring.GetCenter(authoring.transform),
-                    IFF_Key = authoring.IFF_Key.Value
+                    IFF_Key = authoring.IFF_Key.Value,
+                    DamageMultiply = authoring.damageMultiplier,
+                    IsCritical = authoring.IsCriticalPart
                     //BoundSize = boundSize
                 });
                 AddComponent(entity, new ColliderSyncComponent()

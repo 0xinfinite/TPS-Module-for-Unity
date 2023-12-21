@@ -23,6 +23,7 @@ namespace ImaginaryReactor
         public Entity MuzzleFlashEntity;
         public Entity MyMuzzleFlashEntity;
         public float EnergyAmount;
+        public float CriticalMultiply;
         public float RigidbodyPushForce;
         public ColliderKey MagicIFF_Key;
         public float LoudSoundRange;
@@ -36,6 +37,7 @@ namespace ImaginaryReactor
                 HitscanFilter = CollisionFilter.Default,
                 ShapeFilter = CollisionFilter.Default,
                 ProjectileSpeed = 100f,
+                CriticalMultiply = 1,
                 HitscanRange = 100f,
                 SphereRadius = 0.01f,
                 EnergyAmount = 100f,

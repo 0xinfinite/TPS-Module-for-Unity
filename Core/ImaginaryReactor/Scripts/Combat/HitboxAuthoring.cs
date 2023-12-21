@@ -106,7 +106,9 @@ namespace ImaginaryReactor
                 {
                     Owner = GetEntity(authoring.OwnerGO, TransformUsageFlags.Dynamic),
                     Center = GetCenter(authoring.transform),
-                    IFF_Key = authoring.IFF_Key.Value
+                    IFF_Key = authoring.IFF_Key.Value,
+                    DamageMultiply = 1f,
+                    IsCritical = false
                     //BoundSize = boundSize
                 });
                 //if (authoring.parent != null)

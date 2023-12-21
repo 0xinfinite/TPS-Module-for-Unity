@@ -63,6 +63,7 @@ namespace ImaginaryReactor
                         HitscanType = HitscanType.SingleRay,
                      ProjectileEntity = GetEntity(authoring.FragmentPrefab, TransformUsageFlags.Dynamic),
                      ImpactParticleEntity = GetEntity(authoring.ExplosionParticle, TransformUsageFlags.Dynamic),
+                     CriticalMultiply = 1
                     },
                     FragmentCount = authoring.FragmentCount,
                     FragmentSpread = authoring.FragmentSpread,

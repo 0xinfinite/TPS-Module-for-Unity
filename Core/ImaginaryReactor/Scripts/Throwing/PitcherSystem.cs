@@ -194,7 +194,7 @@ namespace ImaginaryReactor
                 //{
                 //    FiredPosition = rayStart,
                 //    WarheadForward = rayDir,
-                //    WarheadForceAmount = bullet.EnergyAmount
+                //    WarheadBaseDamage = bullet.EnergyAmount
                 //});
                 //if (pitcher.CurrentGrabEntity != Entity.Null)
                 //{

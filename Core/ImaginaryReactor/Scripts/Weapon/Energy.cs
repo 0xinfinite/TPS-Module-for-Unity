@@ -9,6 +9,11 @@ namespace ImaginaryReactor
         public float3 ForcePosition;
         public float3 ForceNormal;
         public float3 ForceNormalPhysically;
-        public float ForceAmount;
+        public float BaseDamage;
+        public float CriticalDamage;
+    }
+
+    public struct StackedEnergy : IBufferElementData {
+        public Energy Energy;
     }
 }

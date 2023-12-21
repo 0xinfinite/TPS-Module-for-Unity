@@ -24,22 +24,28 @@ public struct SeekerCastObstructionHitsCollector : ICollector<ColliderCastHit>
     private float _closestHitFraction;
     //private Entity _followedCharacter;
     private DynamicBuffer<IgnoreHitboxData> _ignoredEntitiesBuffer;
-    private ColliderKey _targetKey;
+        //private ColliderKey _targetKey;
+        private float3 _origin;
+        private Seeker _seeker;
+        private PhysicsWorld _physicsWorld;
     //[ReadOnly]
     //private ComponentLookup<MagicIFF> _iffLookup;
     public NativeArray<ColliderCastHit> Hits;
     //private int currentIndex;
 
     public SeekerCastObstructionHitsCollector(//Entity followedCharacter,
-        DynamicBuffer<IgnoreHitboxData> ignoredEntitiesBuffer, ColliderKey targetKey, //ComponentLookup<MagicIFF> iffLookup, 
+        float3 colliderOrigin,
+        DynamicBuffer<IgnoreHitboxData> ignoredEntitiesBuffer, Seeker seeker, PhysicsWorld physicsWorld,//ColliderKey targetKey, //ComponentLookup<MagicIFF> iffLookup, 
         int capacity = 1)
     {
         NumHits = 0;
         ClosestHit = default;
         _closestHitFraction = float.MaxValue;
-        //_followedCharacter = followedCharacter;
+            //_followedCharacter = followedCharacter;
+            _origin = colliderOrigin;
         _ignoredEntitiesBuffer = ignoredEntitiesBuffer;
-        _targetKey= targetKey;
+            _seeker = seeker;//_targetKey= targetKey;
+            _physicsWorld = physicsWorld;
        // _iffLookup = iffLookup;
 
         Hits = new NativeArray<ColliderCastHit>(capacity, Allocator.Temp);
@@ -66,36 +72,52 @@ public struct SeekerCastObstructionHitsCollector : ICollector<ColliderCastHit>
                 return false;
             }
         }
-        //if (_iffLookup.HasComponent(hit.Entity))
-        //{
-        //    if (_iffLookup[hit.Entity].Key//hit.Material.CustomTags 
-        //            == _targetKey.Value)
-        //    {
-        //        bool reachedEnd = NumHits + 1 >= Hits.Length;
-        //        // Process valid hit
-        //        if (hit.Fraction < _closestHitFraction)
-        //        {
-        //            _closestHitFraction = hit.Fraction;
-        //            ClosestHit = hit;
-        //        }
+            //if (_iffLookup.HasComponent(hit.Entity))
+            //{
+            //    if (_iffLookup[hit.Entity].Key//hit.Material.CustomTags 
+            //            == _targetKey.Value)
+            //    {
+            //        bool reachedEnd = NumHits + 1 >= Hits.Length;
+            //        // Process valid hit
+            //        if (hit.Fraction < _closestHitFraction)
+            //        {
+            //            _closestHitFraction = hit.Fraction;
+            //            ClosestHit = hit;
+            //        }
 
-        //        if (reachedEnd)
-        //        {
-        //            Hits[Hits.Length - 1] = ClosestHit;
-        //        }
-        //        else
-        //        {
-        //            Hits[NumHits] = hit;
-        //            //currentIndex++;
-        //            NumHits++;
-        //        }
+            //        if (reachedEnd)
+            //        {
+            //            Hits[Hits.Length - 1] = ClosestHit;
+            //        }
+            //        else
+            //        {
+            //            Hits[NumHits] = hit;
+            //            //currentIndex++;
+            //            NumHits++;
+            //        }
 
 
-        //        return true;
-        //    }
-        //}
+            //        return true;
+            //    }
+            //}
+            if (_seeker.CheckRaycast)
+            {
+                RaycastInput rayInput = new RaycastInput() { 
+                    Start = _origin,
+                    End = hit.Position,
+                    Filter = _seeker.RaycastFilter
+                };
+
+                if(_physicsWorld.CastRay(rayInput, out RaycastHit rayHit)){
+                    if(rayHit.Entity != hit.Entity)
+                    {
+                        return false;
+                    }
+                }
+            }
+
             //else
-            if(hit.Material.CustomTags == _targetKey )
+            if(hit.Material.CustomTags ==_seeker.TargetSideKey)// _targetKey )
             {
                 bool reachedEnd = NumHits + 1 >= Hits.Length;
                 // Process valid hit
@@ -328,79 +350,79 @@ public struct ColliderCastObstructionHitsCollector : ICollector<ColliderCastHit>
                     };
 
                     var buffer = entityManager.GetBuffer<IgnoreHitboxData>(entity);
-                    collector = new SeekerCastObstructionHitsCollector(buffer, seeker.TargetSideKey, //SystemAPI.GetComponentLookup<MagicIFF>(true),
+                    collector = new SeekerCastObstructionHitsCollector(ltw.Position, buffer, seeker, physicsWorld, //SystemAPI.GetComponentLookup<MagicIFF>(true),
                         8);
-                    if (physicsWorld.CastCollider(input, ref collector))
+                    if (physicsWorld.CastCollider (input, ref collector))
                     {
                         for (int i = 0; i < collector.NumHits; ++i)
                         {
-                            bool haveToIgnore = false;
+                           // bool haveToIgnore = false;
 
                             ColliderCastHit hit = collector.Hits[i]; //var hit = collector.NumHits[i];
-                                                                     //if (SystemAPI.HasComponent<MagicIFF>(hit.Entity))
-                                                                     //{
-                                                                     //    var iff = SystemAPI.GetComponent<MagicIFF>(hit.Entity);
-                                                                     //    if (iff.Key == seeker.SideKey)
-                                                                     //    {
-                                                                     //        haveToIgnore = true;
-                                                                     //        break;
-                                                                     //    }
-                                                                     //}
+                            //                                         //if (SystemAPI.HasComponent<MagicIFF>(hit.Entity))
+                            //                                         //{
+                            //                                         //    var iff = SystemAPI.GetComponent<MagicIFF>(hit.Entity);
+                            //                                         //    if (iff.Key == seeker.SideKey)
+                            //                                         //    {
+                            //                                         //        haveToIgnore = true;
+                            //                                         //        break;
+                            //                                         //    }
+                            //                                         //}
 
 
-                            for (int j = 0; j < buffer.Length; j++)
+                            //for (int j = 0; j < buffer.Length; j++)
+                            //{
+                            //    if (buffer[j].hitboxEntity == hit.Entity)
+                            //    {
+                            //        haveToIgnore = true;
+                            //        break;
+                            //    }
+                            //}
+
+                            //if (!haveToIgnore)
                             {
-                                if (buffer[j].hitboxEntity == hit.Entity)
-                                {
-                                    haveToIgnore = true;
-                                    break;
-                                }
-                            }
-
-                            if (!haveToIgnore)
-                            {
-                                bool noObstacle = false;
-                                //bool hitsOnHitbox = false;
-                                var hitbox = new Hitbox();
-                                float3 hitboxPos = hit.Position;
-                                ColliderKey key = ColliderKey.Empty;
-                                if (SystemAPI.HasComponent<Hitbox>(hit.Entity))
-                                {
-                                    hitbox = SystemAPI.GetComponent<Hitbox>(hit.Entity);
-                                    //if (SystemAPI.HasComponent<LocalToWorld>(hit.Entity))
-                                    //{
-                                    //    hitboxPos = GetActualPositionOfHitbox(SystemAPI.GetComponent<LocalToWorld>(hit.Entity), hitbox);
-                                    //}
-                                    key = hitbox.IFF_Key;
-                                }
-
-
-                                float3 rayDir = math.normalizesafe(hit.Position - ltw.Position);
-                                RaycastInput rayInput = new RaycastInput()
-                                {
-                                    Start = ltw.Position,
-                                    End = hitboxPos - rayDir * 0.5f, //+ hit.SurfaceNormal * -0.01f,
-                                    Filter = seeker.RaycastFilter
-                                };
-                                RayCastObstructionHitsCollector rayCollector = new RayCastObstructionHitsCollector(buffer, rayDir);
-
-                                physicsWorld.CastRay(rayInput, ref rayCollector);//CapsuleCastCustom(rayStart, rayStart, 0.001f, )
-                                                                                 //.SphereCastCustom<RayCastObstructionHitsCollector>(rayStart, 0.001f, rayDir, bullet.HitscanRange, ref collector,
-                                                                                 //bullet.HitscanFilter, QueryInteraction.IgnoreTriggers);
-
-                                if (rayCollector.NumHits <= 0)
+                                //bool noObstacle = false;
+                                ////bool hitsOnHitbox = false;
+                                //var hitbox = new Hitbox();
+                                //float3 hitboxPos = hit.Position;
+                                //ColliderKey key = ColliderKey.Empty;
+                                //if (SystemAPI.HasComponent<Hitbox>(hit.Entity))
                                 //{
-                                //    if(rayCollector.ClosestHit.Entity == hit.Entity)
-                                //    {
-                                //        hitsOnHitbox = true;
-                                //    }
+                                //    hitbox = SystemAPI.GetComponent<Hitbox>(hit.Entity);
+                                //    //if (SystemAPI.HasComponent<LocalToWorld>(hit.Entity))
+                                //    //{
+                                //    //    hitboxPos = GetActualPositionOfHitbox(SystemAPI.GetComponent<LocalToWorld>(hit.Entity), hitbox);
+                                //    //}
+                                //    key = hitbox.IFF_Key;
                                 //}
-                                //else
-                                {
-                                    noObstacle = true;
-                                }
 
-                                if (noObstacle || !seeker.CheckRaycast)//|| hitsOnHitbox)
+
+                                //float3 rayDir = math.normalizesafe(hit.Position - ltw.Position);
+                                //RaycastInput rayInput = new RaycastInput()
+                                //{
+                                //    Start = ltw.Position,
+                                //    End = hitboxPos - rayDir * 0.5f, //+ hit.SurfaceNormal * -0.01f,
+                                //    Filter = seeker.RaycastFilter
+                                //};
+                                //RayCastObstructionHitsCollector rayCollector = new RayCastObstructionHitsCollector(buffer, rayDir);
+
+                                //physicsWorld.CastRay(rayInput, ref rayCollector);//CapsuleCastCustom(rayStart, rayStart, 0.001f, )
+                                //                                                 //.SphereCastCustom<RayCastObstructionHitsCollector>(rayStart, 0.001f, rayDir, bullet.HitscanRange, ref collector,
+                                //                                                 //bullet.HitscanFilter, QueryInteraction.IgnoreTriggers);
+
+                                //if (rayCollector.NumHits <= 0)
+                                ////{
+                                ////    if(rayCollector.ClosestHit.Entity == hit.Entity)
+                                ////    {
+                                ////        hitsOnHitbox = true;
+                                ////    }
+                                ////}
+                                ////else
+                                //{
+                                //    noObstacle = true;
+                                //}
+
+                                //if (noObstacle || !seeker.CheckRaycast)//|| hitsOnHitbox)
                                 {
                                     //UnityEngine.Debug.Log("Target Found!");
                                     float3 velocity = float3.zero;
@@ -417,9 +439,9 @@ public struct ColliderCastObstructionHitsCollector : ICollector<ColliderCastHit>
                                     {
                                         //hasHitbox = true;
                                         //hitbox = SystemAPI.GetComponent<Hitbox>(hit.Entity);
-                                        if (SystemAPI.HasComponent<PhysicsVelocity>(hitbox.Owner))
+                                        if (SystemAPI.HasComponent<PhysicsVelocity>(hit.Entity/*hitbox.Owner*/))
                                         {
-                                            velocity = SystemAPI.GetComponent<PhysicsVelocity>(hitbox.Owner).Linear;
+                                            velocity = SystemAPI.GetComponent<PhysicsVelocity>(hit.Entity /*hitbox.Owner*/).Linear;
                                         }
                                         //hitboxOwnerPos = SystemAPI.GetComponent<LocalToWorld>(hitbox.Owner).Position;
 
@@ -438,11 +460,11 @@ public struct ColliderCastObstructionHitsCollector : ICollector<ColliderCastHit>
                                         hit.Entity,
                                         IsDirection = seeker.GetDirection,
                                         LastKnownVector = seeker.GetDirection ? //(hasHitbox ? math.normalizesafe(hitboxOwnerPos - ltw.Position) : 
-                                        rayDir//)
+                                        math.normalizesafe(hit.Position - ltw.Position) //rayDir //)
                                         : //(hasHitbox ? hitboxOwnerPos :
-                                          hitboxPos, //),
+                                          hit.Position,//hitboxPos, //),
                                         TargetVelocity = velocity,
-                                        TargetKey = key//triggerEvent.ColliderKeyA
+                                        TargetKey = seeker.TargetSideKey    // key//triggerEvent.ColliderKeyA
                                     });
                                 }
                             }

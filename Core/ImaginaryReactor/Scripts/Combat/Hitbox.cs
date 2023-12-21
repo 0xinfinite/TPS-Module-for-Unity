@@ -7,6 +7,8 @@ public struct Hitbox : IComponentData
 {
     public Entity Owner;
     public float3 Center;
+    public bool IsCritical;
+    public float DamageMultiply;
     public ColliderKey IFF_Key;
     //public float BoundSize;
 }
