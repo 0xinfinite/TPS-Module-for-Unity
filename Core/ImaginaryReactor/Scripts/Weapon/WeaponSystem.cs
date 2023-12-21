@@ -87,6 +87,7 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
 
         private float _closestHitFraction;
         private float3 _origin;
+        private float _radius;
         //private Entity _followedCharacter;
        // private DynamicBuffer<IgnoreHitboxData> _ignoredEntitiesBuffer;
 
@@ -94,14 +95,15 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
 
         public SphereCastObstructionHitsCollector(//Entity followedCharacter,
             //DynamicBuffer<IgnoreHitboxData> ignoredEntitiesBuffer,
-            float3 origin, PhysicsWorld world, CollisionFilter raycastFilter,
+            float3 origin, PhysicsWorld world, CollisionFilter raycastFilter, float radius,
             int capacity = 1)
         {
             NumHits = 0;
             ClosestHit = default;
-
+            _radius = radius;
             _closestHitFraction = float.MaxValue;
             _origin = origin;
+
             PhysicsWorld = world;
             _raycastFilter = raycastFilter;
             //_followedCharacter = followedCharacter;
@@ -117,10 +119,10 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
             //    return false;
             //}
 
-            if (/*math.dot(hit.SurfaceNormal, _bulletDirection) < 0f ||*/ !PhysicsUtilities.IsCollidable(hit.Material))
-            {
-                return false;
-            }
+            //if (/*math.dot(hit.SurfaceNormal, _bulletDirection) < 0f ||*/ !PhysicsUtilities.IsCollidable(hit.Material))
+            //{
+            //    return false;
+            //}
 
             //for (int i = 0; i < _ignoredEntitiesBuffer.Length; i++)
             //{
@@ -130,15 +132,24 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
             //    }
             //}
 
-            RaycastInput rayInput = new RaycastInput() { 
-             Start = _origin,
-             End = hit.Position,
-             Filter = _raycastFilter
+            RaycastInput rayInput = new RaycastInput()
+            {
+                Start = _origin,
+                End = hit.Position, //_origin + math.normalizesafe(hit.Position- _origin)/**hit.Fraction*_radius*/,
+                Filter = _raycastFilter
             };
 
-            if(PhysicsWorld.CastRay(rayInput))
+            //UnityEngine.Debug.DrawLine(rayInput.Start, rayInput.End, UnityEngine.Color.red, 2f);
+
+            if (PhysicsWorld.CastRay(rayInput, out RaycastHit rayHit))
             {
-                return false;
+                //UnityEngine.Debug.Log(rayHit.Position);
+                //UnityEngine.Debug.DrawLine(rayInput.Start, rayHit.Position, UnityEngine.Color.white, 3f);
+                if (rayHit.Entity != hit.Entity)
+                {
+                    //UnityEngine.Debug.Log("Ray Filtered");
+                    return false; 
+                }
             }
 
             // Process valid hit
@@ -269,9 +280,9 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
                         case BulletType.SphericalExplosive:
 
                             var collector = new SphereCastObstructionHitsCollector(//excludeHitboxes,
-                                ltw.Position, PhysicsWorld, warhead.Fragment.HitscanFilter, 128);
+                                ltw.Position, PhysicsWorld, warhead.Fragment.HitscanFilter, warhead.Fragment.SphereRadius, 128);
                             if (PhysicsWorld.SphereCastCustom<SphereCastObstructionHitsCollector>(ltw.Position, warhead.Fragment.SphereRadius, new float3(0, -1, 0), warhead.Fragment.SphereRadius,
-                                ref collector, warhead.Fragment.ShapeFilter))
+                                ref collector, warhead.Fragment.ShapeFilter,QueryInteraction.IgnoreTriggers))
                             //(origin, warhead.Fragment.SphereRadius, float3.zero, warhead.Fragment.SphereRadius,
                             //ref collector , CollisionFilter.Default))
                             {

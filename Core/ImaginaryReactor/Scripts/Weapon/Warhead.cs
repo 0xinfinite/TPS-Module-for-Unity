@@ -19,7 +19,10 @@ namespace ImaginaryReactor
         public float FragmentSpread;
         //public float FragmentForce;
         //public ColliderKey MagicIFF_Key;
+        public bool DetonateWhenContact;
 
+        [HideInInspector]
+        public float3 BouncedNormal;
 
         //public static Warhead GetDefault()
         //{

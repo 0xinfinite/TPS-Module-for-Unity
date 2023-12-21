@@ -7,8 +7,6 @@ using Unity.Physics.Systems;
 using Unity.Physics.Extensions;
 using Unity.Mathematics;
 using Unity.Transforms;
-using Codice.CM.Client.Differences;
-using static UnityEditor.Experimental.GraphView.Port;
 
 namespace ImaginaryReactor {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -16,7 +14,7 @@ namespace ImaginaryReactor {
     {
       
 
-        public static void Ignition(Warhead warhead, Entity warheadEntity, Entity targetEntity, ref EntityCommandBuffer ecb,
+        public static void Penetrate(Warhead warhead, Entity warheadEntity, Entity targetEntity, ref EntityCommandBuffer ecb,
             ComponentLookup<TriggedWarheadData> FiredWarheadDataLookup, ComponentLookup<LocalToWorld> LTWLookup,
             float3 forcePosition, float3 forceNormal)
         {
@@ -47,7 +45,7 @@ namespace ImaginaryReactor {
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var physicsWorldSingleton = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
+            //var physicsWorldSingleton = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
             var _ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);//state.World.GetOrCreateSystemManaged<BeginSimulationEntityCommandBufferSystem>().CreateCommandBuffer();
 
             //foreach (var (delayedWarhead, ltw) in SystemAPI.Query<Warhead, LocalToWorld>()
@@ -64,7 +62,8 @@ namespace ImaginaryReactor {
                 LTWLookup = state.GetComponentLookup<LocalToWorld>(false),
                 MagicIFF_Lookup = state.GetComponentLookup<MagicIFF>(false),
                 HitboxLookup = state.GetComponentLookup<Hitbox>(false),
-                PhysicsWorldSingleton = physicsWorldSingleton,// PhysicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
+                PhysicsWorld//Singleton
+                = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,   //physicsWorldSingleton,// PhysicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld,
                 ecb = _ecb,
                 entityManager = state.EntityManager
             };//.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(),state.Dependency);//.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
@@ -82,7 +81,7 @@ namespace ImaginaryReactor {
             public ComponentLookup<LocalToWorld> LTWLookup;
             public ComponentLookup<MagicIFF> MagicIFF_Lookup;
             public ComponentLookup<Hitbox> HitboxLookup;
-            public PhysicsWorldSingleton PhysicsWorldSingleton;
+            public PhysicsWorld PhysicsWorld;
             public EntityCommandBuffer ecb;
             public EntityManager entityManager;
 
@@ -90,25 +89,40 @@ namespace ImaginaryReactor {
             public void Execute(/*TriggerEvent*/CollisionEvent collisionEvent)
             {
                 //UnityEngine.Debug.Log("Collision Event Invoked");
-                var entityA = collisionEvent.EntityA;
-                var entityB = collisionEvent.EntityB;
+                Entity entityA;
+                Entity entityB;
 
-                var isEntityAWarhead = WarheadLookup.HasComponent(entityA);
-                var isEntityBWarhead = WarheadLookup.HasComponent(entityB);
+                var isEntityAWarhead = WarheadLookup.HasComponent(collisionEvent.EntityA);
+                var isEntityBWarhead = WarheadLookup.HasComponent(collisionEvent.EntityB);
 
-                if (isEntityAWarhead && isEntityBWarhead) {
-                    ecb.DestroyEntity(entityA);
-                    ecb.DestroyEntity(entityB);
-                    return;
+                //if (isEntityAWarhead && isEntityBWarhead) {
+                //    ecb.DestroyEntity(collisionEvent.EntityA);
+                //    ecb.DestroyEntity(collisionEvent.EntityB);
+                //    return;
+                //}
+                if (isEntityAWarhead)
+                {
+                    entityA = collisionEvent.EntityA;
+                    entityB = collisionEvent.EntityB;
+                }
+                else
+                {
+                    entityA = collisionEvent.EntityB;
+                    entityB = collisionEvent.EntityA;
                 }
 
-                var detail = collisionEvent.CalculateDetails(ref PhysicsWorldSingleton.PhysicsWorld);
+                    var detail = collisionEvent.CalculateDetails(ref PhysicsWorld);
                 DynamicBuffer<IgnoreHitboxData> buffer;
                 //bool ignoreThis = false;
-                if (isEntityAWarhead)
+                //if (isEntityAWarhead)
                 {
                     if (WarheadLookup.TryGetComponent(entityA, out Warhead warhead))
                     {
+                        warhead.BouncedNormal = -collisionEvent.Normal;
+
+                        if (!warhead.DetonateWhenContact)
+                            return;
+
                         if (entityManager.HasBuffer<IgnoreHitboxData>(entityA))
                         {
                             buffer = entityManager.GetBuffer<IgnoreHitboxData>(entityA);
@@ -121,102 +135,151 @@ namespace ImaginaryReactor {
                                 }
                             }
                         }
-                        if (warhead.ImpactParticle != Entity.Null)// && LTWLookup.TryGetComponent(entityA, out LocalToWorld ltw))
+
+                        switch(warhead.Fragment.BulletType) 
                         {
-                            Entity impactParticle = ecb.Instantiate(warhead.ImpactParticle);
-                            ecb.SetComponent(impactParticle, new LocalTransform()
+                            case BulletType.Hitscan:
+                            if (warhead.ImpactParticle != Entity.Null)// && LTWLookup.TryGetComponent(entityA, out LocalToWorld ltw))
                             {
-                                Position = detail.AverageContactPointPosition,//ltw.Position,//hit.Position,
-                                Rotation = quaternion.LookRotation(collisionEvent.Normal, new float3(0, 1, 0)),//ltw.Rotation,
-                                Scale = 1
-                            }
-                            );
-                        }
-                        bool hostile = true;
-                        if (HitboxLookup.TryGetComponent(entityB, out Hitbox hitbox) && MagicIFF_Lookup.TryGetComponent(entityA, out MagicIFF iff) && hitbox.IFF_Key == iff.Key)
-                        {
-                            hostile = false;
-                        }
-                        if (hostile)
-                        {
-
-                            Ignition(warhead, entityA, entityB, ref ecb, FiredWarheadDataLookup, LTWLookup,
-                                detail.AverageContactPointPosition, -collisionEvent.Normal);
-
-
-                            //var hasFiredData = FiredWarheadDataLookup.HasComponent(entityA);
-                            //ecb.AddComponent(entityB, new Energy()
-                            //{
-                            //    SourcePosition = hasFiredData ? FiredWarheadDataLookup[entityA].FiredPosition : LTWLookup[entityA].Position - LTWLookup[entityA].Forward * 100f,
-                            //    ForcePosition = detail.AverageContactPointPosition,
-                            //    ForceNormalPhysically = -collisionEvent.Normal * warhead.FragmentForce,
-                            //    ForceNormal = hasFiredData ? FiredWarheadDataLookup[entityA].WarheadForward : LTWLookup[entityA].Forward,
-                            //    ForceAmount = warhead.Damage
-                            //});
-                        }
-                    }
-                    ecb.DestroyEntity(entityA);
-                }
-                else if (isEntityBWarhead)
-                {
-                    //UnityEngine.Debug.Log("B has warhead");
-                    if (WarheadLookup.TryGetComponent(entityB, out Warhead warhead))
-                    {
-                        if (entityManager.HasBuffer<IgnoreHitboxData>(entityB))
-                        {
-                            buffer = entityManager.GetBuffer<IgnoreHitboxData>(entityB);
-
-                            for (int i = 0; i < buffer.Length; ++i)
-                            {
-                                if (buffer[i].hitboxEntity == entityA)
+                                Entity impactParticle = ecb.Instantiate(warhead.ImpactParticle);
+                                ecb.SetComponent(impactParticle, new LocalTransform()
                                 {
-                                    return;
-                                    //ignoreThis = true;
-                                    //break;
+                                    Position = detail.AverageContactPointPosition,//ltw.Position,//hit.Position,
+                                    Rotation = quaternion.LookRotation(collisionEvent.Normal, new float3(0, 1, 0)),//ltw.Rotation,
+                                    Scale = 1
                                 }
+                                );
                             }
-                        }
-                        //if (ignoreThis)
-                        //{
-                        //    return;
-                        //}
-
-                        if (warhead.ImpactParticle != Entity.Null)// && LTWLookup.TryGetComponent(entityB, out LocalToWorld ltw))
-                        {
-                            Entity impactParticle = ecb.Instantiate(warhead.ImpactParticle);
-                            ecb.SetComponent(impactParticle, new LocalTransform()
+                            bool hostile = true;
+                            if (HitboxLookup.TryGetComponent(entityB, out Hitbox hitbox) && MagicIFF_Lookup.TryGetComponent(entityA, out MagicIFF iff) && hitbox.IFF_Key == iff.Key)
                             {
-                                Position = detail.AverageContactPointPosition,//ltw.Position,//hit.Position,
-                                Rotation = quaternion.LookRotation(collisionEvent.Normal, new float3(0, 1, 0)),//ltw.Rotation,
-                                Scale = 1
+                                hostile = false;
                             }
-                            );
+                            if (hostile)
+                            {
+                                Penetrate(warhead, entityA, entityB, ref ecb, FiredWarheadDataLookup, LTWLookup,
+                                    detail.AverageContactPointPosition, -collisionEvent.Normal);
+
+
+                                //var hasFiredData = FiredWarheadDataLookup.HasComponent(entityA);
+                                //ecb.AddComponent(entityB, new Energy()
+                                //{
+                                //    SourcePosition = hasFiredData ? FiredWarheadDataLookup[entityA].FiredPosition : LTWLookup[entityA].Position - LTWLookup[entityA].Forward * 100f,
+                                //    ForcePosition = detail.AverageContactPointPosition,
+                                //    ForceNormalPhysically = -collisionEvent.Normal * warhead.FragmentForce,
+                                //    ForceNormal = hasFiredData ? FiredWarheadDataLookup[entityA].WarheadForward : LTWLookup[entityA].Forward,
+                                //    ForceAmount = warhead.Damage
+                                //});
+                            }
+                                break;
+                            case BulletType.SphericalExplosive:
+                                //var ignoreHitboxList = new DynamicBuffer<IgnoreHitboxData>();
+                                //Ignition(warhead, 
+                                //    ref PhysicsWorld, //ref ignoreHitboxList , 
+                                //    LTWLookup[entityA].Position + warhead.BouncedNormal * 0.1f, ref ecb);
+                                var ignoreHitboxList = new DynamicBuffer<IgnoreHitboxData>();
+                                //Ignition(ref warhead, ref physicsWorld, //ref ignoreHitboxList , 
+                                //    ltw.Position, ref ecb);
+                                //ecb.RemoveComponent<Warhead>(entity);
+
+                                var entityALTW = LTWLookup[entityA];
+                                var warheadPosition = entityALTW.Position;
+                                //var warheadRotation = entityALTW.Rotation;
+                                var explosionEffect = ecb.Instantiate(warhead.Fragment.ImpactParticleEntity);
+                                var collisionNormal = collisionEvent.Normal * (isEntityAWarhead ? 1 : -1);
+                                ecb.SetComponent(explosionEffect, new LocalTransform()
+                                {
+                                    Position = detail.AverageContactPointPosition, //warheadPosition,//rayStart + rayDir * bullet.HitscanRange,
+                                    Rotation = collisionNormal.y>0.99f? quaternion.LookRotation(entityALTW.Up*-1, collisionNormal)
+                                    : quaternion.LookRotation(math.cross(math.cross(entityALTW.Forward, collisionNormal), collisionNormal), collisionNormal),
+                                    //quaternion.LookRotation(sights.MuzzleForward, new float3(0, 1, 0)),//(rayDir, rayDir.y > 0.99f ? transformForward * -1 : new float3(0, 1, 0)),
+                                    Scale = 1
+                                });
+                                        var collector = new SphereCastObstructionHitsCollector(//excludeHitboxes,
+                                            warheadPosition, PhysicsWorld, warhead.Fragment.HitscanFilter, warhead.Fragment.SphereRadius,128);
+                                        if (PhysicsWorld.SphereCastCustom<SphereCastObstructionHitsCollector>(warheadPosition, warhead.Fragment.SphereRadius, new float3(0, -1, 0), warhead.Fragment.SphereRadius,
+                                            ref collector, warhead.Fragment.ShapeFilter, QueryInteraction.IgnoreTriggers))
+                                        //(origin, warhead.Fragment.SphereRadius, float3.zero, warhead.Fragment.SphereRadius,
+                                        //ref collector , CollisionFilter.Default))
+                                        {
+                                            UnityEngine.Debug.Log("Detect Hitbox : "+ collector.NumHits);
+                                            for (int i = 0; i < collector.NumHits; ++i)
+                                            {
+                                                var hit = collector.Hits[i];
+                                                //  UnityEngine.Debug.Log("Hitbox : " + hit.Entity.Index);
+
+                                                ecb.AddComponent(hit.Entity, new Energy()
+                                                {
+                                                    SourcePosition = warheadPosition,
+                                                    ForcePosition = hit.Position,
+                                                    ForceNormal = hit.SurfaceNormal,
+                                                    ForceNormalPhysically = hit.SurfaceNormal,
+                                                    ForceAmount = warhead.Fragment.EnergyAmount
+                                                });
+                                            }
+                                        }
+                                        //else
+                                        //{
+                                        //    UnityEngine.Debug.Log("no hitbox");
+                                        //}
+                                        collector.Hits.Dispose();
+                                      
+                                break;
                         }
-
-                        bool hostile = true;
-
-                        if (HitboxLookup.TryGetComponent(entityA, out Hitbox hitbox) && MagicIFF_Lookup.TryGetComponent(entityB, out MagicIFF iff) && hitbox.IFF_Key == iff.Key)
-                        {
-                            hostile = false;
-                        }
-                        //UnityEngine.Debug.Log(hitbox.IFF_Key + " VS " + iff.Key);
-
-                        if (hostile)
-                        {
-                            Ignition(warhead, entityB, entityA, ref ecb, FiredWarheadDataLookup, LTWLookup,
-                                detail.AverageContactPointPosition, -collisionEvent.Normal);
-
-                           
-                        }
-                        //PhysicsWorldSingleton.PhysicsWorld.ApplyImpulse(PhysicsWorldSingleton.PhysicsWorld.GetRigidBodyIndex(entityA),
-                        //    -collisionEvent.Normal * detail.EstimatedImpulse,  detail.AverageContactPointPosition);
+                        ecb.DestroyEntity(entityA);
                     }
-                    //PhysicsWorldSingleton.PhysicsWorld.ApplyImpulse(PhysicsWorldSingleton.PhysicsWorld.GetRigidBodyIndex(entityA),
-                    //    -collisionEvent.Normal * detail.EstimatedImpulse, detail.AverageContactPointPosition);
-                    ecb.DestroyEntity(entityB);
                 }
-
+              
             }
+
+         //   [BurstCompile]
+         //   public void Ignition(in Warhead warhead, 
+         //  ref PhysicsWorld physicsWorld, //ref DynamicBuffer<IgnoreHitboxData> excludeHitboxes,
+         //in float3 origin, ref EntityCommandBuffer ecb)
+         //   {
+
+         //       switch (warhead.Fragment.BulletType)
+         //       {
+         //           case BulletType.Hitscan:
+         //               break;
+         //           case BulletType.Projectile:
+         //               break;
+         //           case BulletType.SphericalExplosive:
+
+         //               var collector = new SphereCastObstructionHitsCollector(//excludeHitboxes,
+         //                   origin, physicsWorld, warhead.Fragment.HitscanFilter, 128);
+         //               if (physicsWorld.SphereCastCustom<SphereCastObstructionHitsCollector>(origin, warhead.Fragment.SphereRadius, new float3(0, -1, 0), warhead.Fragment.SphereRadius,
+         //                   ref collector, warhead.Fragment.ShapeFilter,QueryInteraction.IgnoreTriggers))
+         //               //(origin, warhead.Fragment.SphereRadius, float3.zero, warhead.Fragment.SphereRadius,
+         //               //ref collector , CollisionFilter.Default))
+         //               {
+         //                   //UnityEngine.Debug.Log("Detect Hitbox");
+         //                   for (int i = 0; i < collector.NumHits; ++i)
+         //                   {
+         //                       var hit = collector.Hits[i];
+         //                       //  UnityEngine.Debug.Log("Hitbox : " + hit.Entity.Index);
+
+         //                       ecb.SetComponent(hit.Entity, new Energy()
+         //                       {
+         //                           SourcePosition = hit.Position,
+         //                           ForcePosition = hit.Position,
+         //                           ForceNormal = hit.SurfaceNormal,
+         //                           ForceNormalPhysically = hit.SurfaceNormal,
+         //                           ForceAmount = warhead.Fragment.EnergyAmount
+         //                       });
+         //                   }
+         //               }
+         //               //else
+         //               //{
+         //               //    UnityEngine.Debug.Log("no hitbox");
+         //               //}
+         //               collector.Hits.Dispose();
+         //               break;
+         //           case BulletType.ShapeExplosive:
+         //               break;
+         //       }
+         //   }
         }
+       
     }
 }

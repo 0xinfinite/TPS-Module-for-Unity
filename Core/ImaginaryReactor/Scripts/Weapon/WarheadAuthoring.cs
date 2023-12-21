@@ -25,6 +25,7 @@ namespace ImaginaryReactor
         public float loudSoundRange = 100f;
         public PhysicsMaterialProperties physicsMaterial;
         public CollisionFilter hitscanFilter;
+        public bool detonateWhenContact = true;
 
         public class Baker : Baker<WarheadAuthoring>
         {
@@ -60,6 +61,7 @@ namespace ImaginaryReactor
                         ImpactParticle = GetEntity(authoring.impactParticle, TransformUsageFlags.Dynamic),
                         FragmentCount = authoring.fragmentCount,
                         FragmentSpread = authoring.fragmentSpread,
+                        DetonateWhenContact = authoring.detonateWhenContact,
                         //FragmentCount
 
                     });

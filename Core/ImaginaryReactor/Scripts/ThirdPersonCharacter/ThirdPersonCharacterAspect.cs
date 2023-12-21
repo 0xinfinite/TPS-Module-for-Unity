@@ -157,7 +157,7 @@ namespace ImaginaryReactor
                 if (characterComponent.AbleToWallRun && math.lengthsq(characterComponent.WallNormal) > 0.1 && math.distance(characterComponent.WallNormal,
                     characterComponent.LastWallNormal) > 0.1f && characterComponent.WallSlideTime < characterComponent.WallSlideDuration)//&& characterComponent.WallNormal.y < 0.3f)
                 {
-                    UnityEngine.Debug.Log("Wallrunning");
+                    //UnityEngine.Debug.Log("Wallrunning");
                     float3 tmpVelocity = characterBody.RelativeVelocity;
                     float3 verticalVelocity = math.projectsafe(tmpVelocity, characterBody.GroundingUp);
 

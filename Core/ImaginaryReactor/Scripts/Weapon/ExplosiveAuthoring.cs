@@ -66,6 +66,7 @@ namespace ImaginaryReactor
                     },
                     FragmentCount = authoring.FragmentCount,
                     FragmentSpread = authoring.FragmentSpread,
+                    DetonateWhenContact = authoring.DetonateWhenContact
                     //FragmentForce = authoring.FragmentForce,
                 });
                 if(authoring.DetonatorDelay > 0)
