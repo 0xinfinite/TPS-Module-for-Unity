@@ -7,61 +7,156 @@ using Unity.Transforms;
 using UnityEngine;
 using Unity.Physics.Systems;
 using Unity.CharacterController;
+using UnityEngine.InputSystem;
 
 namespace ImaginaryReactor { 
 [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial  class ThirdPersonPlayerInputsSystem : SystemBase
 {
+        private ThirdPersonControlInput input;
+        //public bool fired;
+        public bool switchView;
+        public bool throwRelease;
+        public bool jump;
+
     protected override void OnCreate()
     {
         RequireForUpdate<FixedTickSystem.Singleton>();
         RequireForUpdate(SystemAPI.QueryBuilder().WithAll<ThirdPersonPlayer, ThirdPersonPlayerInputs, PlayerTag>().Build());
+
+            input = new ThirdPersonControlInput();
+            //input.Jumper.Fire.performed += OnFirePressing;
+            input.Jumper.Jump.performed += OnJumpPress;
+            input.Jumper.ThrowRelease.performed += OnThrowRelease;
+            input.Jumper.SwitchView.performed += OnSwitchViewPress;
+            input.Enable();
     }
-    
-    protected override void OnUpdate()
+
+        //private void OnAimDownSights(InputAction.CallbackContext obj)
+        //{
+
+        //}
+
+        protected override void OnDestroy()
+        {
+            //input.Jumper.Fire.performed -= OnFirePressing;
+            input.Jumper.Jump.performed -= OnJumpPress;
+            input.Jumper.ThrowRelease.performed -= OnThrowRelease;
+            input.Jumper.SwitchView.performed -= OnSwitchViewPress;
+            input.Disable();
+            
+        }
+        private void OnJumpPress(InputAction.CallbackContext obj)//ref ThirdPersonPlayerInputs playerInputs, uint fixedTick)
+        {
+            jump = true;
+        }
+        private void OnSwitchViewPress(InputAction.CallbackContext obj)//ref ThirdPersonPlayerInputs playerInputs, uint fixedTick)
+        {
+            switchView = true;
+        }
+        private void OnThrowRelease(InputAction.CallbackContext obj)//ref ThirdPersonPlayerInputs playerInputs, uint fixedTick)
+        {
+            throwRelease = true;
+        }
+
+        //private void OnFirePressing(InputAction.CallbackContext obj )//ref ThirdPersonPlayerInputs playerInputs, uint fixedTick)
+        //{
+        //    fired = true;//playerInputs.FirePressed.Set(fixedTick);
+        //}
+
+        protected override void OnUpdate()
     {
         uint fixedTick = SystemAPI.GetSingleton<FixedTickSystem.Singleton>().Tick;
 
-        foreach (var (playerInputs, player, playerTag) in SystemAPI.Query<RefRW<ThirdPersonPlayerInputs>, ThirdPersonPlayer, PlayerTag>())
-        {
-            playerInputs.ValueRW.MoveInput = new float2();
-            playerInputs.ValueRW.MoveInput.y += Input.GetKey(KeyCode.W) ? 1f : 0f;
-            playerInputs.ValueRW.MoveInput.y += Input.GetKey(KeyCode.S) ? -1f : 0f;
-            playerInputs.ValueRW.MoveInput.x += Input.GetKey(KeyCode.D) ? 1f : 0f;
-            playerInputs.ValueRW.MoveInput.x += Input.GetKey(KeyCode.A) ? -1f : 0f;
-            
-            playerInputs.ValueRW.CameraLookInput = new float2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-                //playerInputs.ValueRW.CameraZoomInput = -Input.mouseScrollDelta.y;
-                playerInputs.ValueRW.CameraZoomInput = Input.GetMouseButton(1)?1:0;
+            foreach (var (playerInputs, player, playerTag) in SystemAPI.Query<RefRW<ThirdPersonPlayerInputs>, ThirdPersonPlayer, PlayerTag>())
+            {
+                //if (InputSystemManager.instance != null)
+                {
+                    
 
-            // For button presses that need to be queried during fixed update, use the "FixedInputEvent" helper struct.
-            // This is part of a strategy for proper handling of button press events that are consumed during the fixed update group
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                playerInputs.ValueRW.JumpPressed.Set(fixedTick);
-            }
-            playerInputs.ValueRW.FloatingInput = Input.GetKey(KeyCode.Space) ? 1f : 0f;
-            if (Input.GetMouseButton(0))
-            {
-                playerInputs.ValueRW.FirePressed.Set(fixedTick); 
-            }
-                if (Input.GetMouseButtonDown(2))
-                {
-                    playerInputs.ValueRW.ThrowPress.Set(fixedTick);
+                    playerInputs.ValueRW.MoveInput = input.Jumper.Move.ReadValue<Vector2>();// new float2();
+
+                    float ads = input.Jumper.ADS.ReadValue<float>();
+                    playerInputs.ValueRW.CameraZoomInput = ads;
+                    UnityEngine.Debug.Log("ADS : "+ads);
+                    playerInputs.ValueRW.CameraLookInput = input.Jumper.Look.ReadValue<Vector2>()
+                        * math.lerp(1,0.25f,ads) ;//new float2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+                    //playerInputs.ValueRW.CameraZoomInput = -Input.mouseScrollDelta.y;
+                    
+
+                    // For button presses that need to be queried during fixed update, use the "FixedInputEvent" helper struct.
+                    // This is part of a strategy for proper handling of button press events that are consumed during the fixed update group
+                    if (jump||Input.GetKeyDown(KeyCode.Space))
+                    {
+                        playerInputs.ValueRW.JumpPressed.Set(fixedTick);
+                    }
+                    playerInputs.ValueRW.FloatingInput = Input.GetKey(KeyCode.Space) ? 1f : 0f;
+                    if (input.Jumper.Fire.ReadValue<float>()>0.5f)//(fired)//(Input.GetMouseButton(0))
+                    {
+                        playerInputs.ValueRW.FirePressed.Set(fixedTick);
+                    }
+                    //fired = false;
+                    if (Input.GetMouseButtonDown(2))
+                    {
+                        playerInputs.ValueRW.ThrowPress.Set(fixedTick);
+                    }
+                    if (throwRelease||Input.GetMouseButtonUp(2))
+                    {
+                        playerInputs.ValueRW.ThrowRelease.Set(fixedTick);
+                    }
+                    if (Input.GetKeyDown(KeyCode.F))
+                    {
+                        playerInputs.ValueRW.InteractPressed.Set(fixedTick);
+                    }
+                    if (switchView||Input.GetKeyDown(KeyCode.Tab))
+                    {
+                        playerInputs.ValueRW.SwitchViewPressed.Set(fixedTick);
+                    }
                 }
-                if (Input.GetMouseButtonUp(2))
-                {
-                    playerInputs.ValueRW.ThrowRelease.Set(fixedTick);
-                }
-            if (Input.GetKeyDown(KeyCode.F))
-            {
-                playerInputs.ValueRW.InteractPressed.Set(fixedTick);
+                //else
+                //{
+                //    playerInputs.ValueRW.MoveInput = new float2();
+                //    playerInputs.ValueRW.MoveInput.y += Input.GetKey(KeyCode.W) ? 1f : 0f;
+                //    playerInputs.ValueRW.MoveInput.y += Input.GetKey(KeyCode.S) ? -1f : 0f;
+                //    playerInputs.ValueRW.MoveInput.x += Input.GetKey(KeyCode.D) ? 1f : 0f;
+                //    playerInputs.ValueRW.MoveInput.x += Input.GetKey(KeyCode.A) ? -1f : 0f;
+
+                //    playerInputs.ValueRW.CameraLookInput = new float2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+                //    //playerInputs.ValueRW.CameraZoomInput = -Input.mouseScrollDelta.y;
+                //    playerInputs.ValueRW.CameraZoomInput = Input.GetMouseButton(1) ? 1 : 0;
+
+                //    // For button presses that need to be queried during fixed update, use the "FixedInputEvent" helper struct.
+                //    // This is part of a strategy for proper handling of button press events that are consumed during the fixed update group
+                //    if (Input.GetKeyDown(KeyCode.Space))
+                //    {
+                //        playerInputs.ValueRW.JumpPressed.Set(fixedTick);
+                //    }
+                //    playerInputs.ValueRW.FloatingInput = Input.GetKey(KeyCode.Space) ? 1f : 0f;
+                //    if (Input.GetMouseButton(0))
+                //    {
+                //        playerInputs.ValueRW.FirePressed.Set(fixedTick);
+                //    }
+                //    if (Input.GetMouseButtonDown(2))
+                //    {
+                //        playerInputs.ValueRW.ThrowPress.Set(fixedTick);
+                //    }
+                //    if (Input.GetMouseButtonUp(2))
+                //    {
+                //        playerInputs.ValueRW.ThrowRelease.Set(fixedTick);
+                //    }
+                //    if (Input.GetKeyDown(KeyCode.F))
+                //    {
+                //        playerInputs.ValueRW.InteractPressed.Set(fixedTick);
+                //    }
+                //    if (Input.GetKeyDown(KeyCode.Tab))
+                //    {
+                //        playerInputs.ValueRW.SwitchViewPressed.Set(fixedTick);
+                //    }
+                //}
+                switchView = false;
+                throwRelease = false;
+                jump = false;
             }
-                if (Input.GetKeyDown(KeyCode.Tab))
-                {
-                    playerInputs.ValueRW.SwitchViewPressed.Set(fixedTick);
-                }
-        }
     }
 }
 

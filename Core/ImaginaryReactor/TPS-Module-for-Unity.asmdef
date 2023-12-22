@@ -14,7 +14,8 @@
         "Unity.Burst",
         "Unity.Transforms",
         "Unity.CharacterController",
-        "Unity.Collections"
+        "Unity.Collections",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

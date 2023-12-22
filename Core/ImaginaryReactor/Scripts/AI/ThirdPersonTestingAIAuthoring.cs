@@ -24,7 +24,10 @@ namespace ImaginaryReactor
                     ControlledCamera = GetEntity(authoring.ControlledCamera, TransformUsageFlags.Dynamic),
                     //InitWeapon = GetEntity(authoring.ControlledWeapon, TransformUsageFlags.Dynamic),
                 });
-                AddComponent(entity, new ThirdPersonPlayerInputs());
+                AddComponent(entity, new ThirdPersonPlayerInputs()
+                {
+
+                });
                 AddComponent(entity, new TestAITag());
 
 

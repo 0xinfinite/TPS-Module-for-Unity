@@ -92,7 +92,9 @@ namespace ImaginaryReactor
             float3 velocityOnPlane = MathUtilities.ProjectOnPlane(body.RelativeVelocity, groundingUp);
             if (ignoreInertia && math.dot(math.normalizesafe(velocityOnPlane), math.normalizesafe(desireToMove)) < 0)
             {
-                body.RelativeVelocity = MathUtilities.ProjectOnPlane(desireToMove, groundingUp) + (groundingUp * jumpSpeed);
+                body.RelativeVelocity = MathUtilities.ProjectOnPlane(desireToMove, groundingUp) 
+                    * math.max( math.length(velocityOnPlane), maxAirSpeed * math.length( desireToMove) )
+                    + (groundingUp * jumpSpeed);
             }
             else
             {
@@ -206,7 +208,7 @@ namespace ImaginaryReactor
                             , characterComponent.AirMaxSpeed);
                         characterControl.Jump = false;
                         characterComponent.LastWallNormal = characterComponent.WallNormal;
-                        characterComponent.WallNormal = 
+                        //characterComponent.WallNormal = 
                         characterComponent.WallSlideTime = 0;
                     }
                     characterComponent.ContactCount = 0;
@@ -249,7 +251,10 @@ namespace ImaginaryReactor
                         }
                         //else
                         {
-                            CharacterControlUtilities.StandardAirMove(ref characterBody.RelativeVelocity, airAcceleration, characterComponent.AirMaxSpeed, characterBody.GroundingUp, deltaTime, false);
+                            CharacterControlUtilities.StandardAirMove(ref characterBody.RelativeVelocity,
+                                airAcceleration// * (math.lengthsq( characterControl.MoveVector)>0.1f? 
+                                //math.saturate(math.dot(characterControl.MoveVector ,math.normalizesafe (tmpVelocity))) : 1)
+                                , characterComponent.AirMaxSpeed, characterBody.GroundingUp, deltaTime, false);
                         }
 
 
