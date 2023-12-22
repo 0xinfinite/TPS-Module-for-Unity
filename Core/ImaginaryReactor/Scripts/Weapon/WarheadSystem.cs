@@ -24,7 +24,8 @@ namespace ImaginaryReactor {
                 SourcePosition = hasFiredData ? FiredWarheadDataLookup[warheadEntity].FiredPosition : 
                 LTWLookup[warheadEntity].Position - LTWLookup[warheadEntity].Forward * 100f,
                 ForcePosition = forcePosition,
-                ForceNormalPhysically = forceNormal* warhead.Fragment.RigidbodyPushForce,
+                IsForcePoint = false,
+                ForceVector = forceNormal* warhead.Fragment.RigidbodyPushForce,
                 ForceNormal = hasFiredData ? FiredWarheadDataLookup[warheadEntity].WarheadForward : LTWLookup[warheadEntity].Forward,
                 BaseDamage = warhead.Fragment.EnergyAmount,
                 //ApplyCritical = true
@@ -120,7 +121,7 @@ namespace ImaginaryReactor {
                 {
                     if (WarheadLookup.TryGetComponent(entityA, out Warhead warhead))
                     {
-                        warhead.BouncedNormal = -collisionEvent.Normal;
+                        warhead.BouncedNormal = collisionEvent.Normal * (isEntityAWarhead?1:-1);
 
                         if (!warhead.DetonateWhenContact)
                             return;
@@ -159,8 +160,8 @@ namespace ImaginaryReactor {
                             }
                             if (hostile)
                             {
-                                Penetrate(warhead, entityA, entityB, ref ecb, FiredWarheadDataLookup, LTWLookup,
-                                    detail.AverageContactPointPosition, -collisionEvent.Normal);
+                                    Penetrate(warhead, entityA, entityB, ref ecb, FiredWarheadDataLookup, LTWLookup,
+                                        detail.AverageContactPointPosition, -warhead.BouncedNormal);//collisionEvent.Normal);
 
 
                                 //var hasFiredData = FiredWarheadDataLookup.HasComponent(entityA);
@@ -168,7 +169,7 @@ namespace ImaginaryReactor {
                                 //{
                                 //    SourcePosition = hasFiredData ? FiredWarheadDataLookup[entityA].FiredPosition : LTWLookup[entityA].Position - LTWLookup[entityA].Forward * 100f,
                                 //    ForcePosition = detail.AverageContactPointPosition,
-                                //    ForceNormalPhysically = -collisionEvent.Normal * warhead.FragmentForce,
+                                //    ForceVector = -collisionEvent.Normal * warhead.FragmentForce,
                                 //    ForceNormal = hasFiredData ? FiredWarheadDataLookup[entityA].WarheadForward : LTWLookup[entityA].Forward,
                                 //    BaseDamage = warhead.Damage
                                 //});
@@ -208,14 +209,15 @@ namespace ImaginaryReactor {
                                             for (int i = 0; i < collector.NumHits; ++i)
                                             {
                                                 var hit = collector.Hits[i];
-                                                //  UnityEngine.Debug.Log("Hitbox : " + hit.Entity.Index);
-
-                                                ecb.AddComponent(hit.Entity, new Energy()
+                                        //  UnityEngine.Debug.Log("Hitbox : " + hit.Entity.Index);
+                                        UnityEngine.Debug.DrawLine(warheadPosition, hit.Position, UnityEngine.Color.red, 3);
+                                        ecb.AddComponent(hit.Entity, new Energy()
                                                 {
                                                     SourcePosition = warheadPosition,
                                                     ForcePosition = hit.Position,
                                                     ForceNormal = hit.SurfaceNormal,
-                                                    ForceNormalPhysically = hit.SurfaceNormal,
+                                                    //IsForcePoint = true,
+                                                    ForceVector = math.normalizesafe( hit.Position-warheadPosition )* warhead.Fragment.RigidbodyPushForce,
                                                     BaseDamage = warhead.Fragment.EnergyAmount,
                                                     //ApplyCritical = false
                                                     CriticalDamage = warhead.Fragment.EnergyAmount
@@ -268,7 +270,7 @@ namespace ImaginaryReactor {
          //                           SourcePosition = hit.Position,
          //                           ForcePosition = hit.Position,
          //                           ForceNormal = hit.SurfaceNormal,
-         //                           ForceNormalPhysically = hit.SurfaceNormal,
+         //                           ForceVector = hit.SurfaceNormal,
          //                           BaseDamage = warhead.Fragment.EnergyAmount
          //                       });
          //                   }

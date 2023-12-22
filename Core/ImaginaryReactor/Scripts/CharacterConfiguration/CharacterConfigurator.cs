@@ -171,6 +171,11 @@ namespace ImaginaryReactor
 
             if (TryGetComponent(out ModelSyncObject modelObj))
             {
+                if(modelObj.ID == -1)
+                {
+                    modelObj.ID = modelObj.gameObject.GetInstanceID();
+                }
+
                 if (newCharacter.TryGetComponent(out ModelSyncAuthoring existSyncAuthoring))
                 {
                     existSyncAuthoring.ID = modelObj.ID;

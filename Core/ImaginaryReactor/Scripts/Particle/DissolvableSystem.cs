@@ -120,7 +120,7 @@ namespace ImaginaryReactor {
         //                        SourcePosition = hit.Position,
         //                        ForcePosition = hit.Position,
         //                        ForceNormal = hit.SurfaceNormal,
-        //                        ForceNormalPhysically = hit.SurfaceNormal,
+        //                        ForceVector = hit.SurfaceNormal,
         //                        BaseDamage = warhead.Fragment.EnergyAmount
         //                    });
         //                }

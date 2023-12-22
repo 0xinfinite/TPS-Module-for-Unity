@@ -41,7 +41,7 @@ namespace ImaginaryReactor {
                 playerInputs.ValueRW.JumpPressed.Set(fixedTick);
             }
             playerInputs.ValueRW.FloatingInput = Input.GetKey(KeyCode.Space) ? 1f : 0f;
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButton(0))
             {
                 playerInputs.ValueRW.FirePressed.Set(fixedTick); 
             }

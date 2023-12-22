@@ -291,13 +291,14 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
                                 {
                                     var hit = collector.Hits[i];
                                     //  UnityEngine.Debug.Log("Hitbox : " + hit.Entity.Index);
+                                    UnityEngine.Debug.DrawLine(ltw.Position, hit.Position, UnityEngine.Color.red, 3);
 
                                     ecb.AddComponent(hit.Entity, new Energy()
                                     {
                                         SourcePosition = ltw.Position,
                                         ForcePosition = hit.Position,
                                         ForceNormal = hit.SurfaceNormal,
-                                        ForceNormalPhysically = hit.SurfaceNormal,
+                                        ForceVector = /*hit.SurfaceNormal*/ math.normalizesafe( hit.Position - ltw.Position ) * warhead.Fragment.RigidbodyPushForce,
                                         BaseDamage = warhead.Fragment.EnergyAmount,
                                         //ApplyCritical = false
                                         CriticalDamage = warhead.Fragment.EnergyAmount
@@ -349,7 +350,7 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
         //                        SourcePosition = hit.Position,
         //                        ForcePosition = hit.Position,
         //                        ForceNormal = hit.SurfaceNormal,
-        //                        ForceNormalPhysically = hit.SurfaceNormal,
+        //                        ForceVector = hit.SurfaceNormal,
         //                        BaseDamage = warhead.Fragment.EnergyAmount
         //                    });
         //                }
@@ -453,6 +454,7 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
           ref EntityCommandBuffer ecb,ref PhysicsWorld physicsWorld)
         {
             bool isHitscan = false;
+            bool isHit = false;
             switch (bullet.BulletType)
             {
                 case BulletType.Projectile:
@@ -472,6 +474,7 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
 
                     if (collector.NumHits > 0)
                     {
+                        isHit = true;
                         //UnityEngine.Debug.Log("closest hit position : " + collector.ClosestHit.Position);
                         if (bullet.ImpactParticleEntity != Entity.Null)
                         {
@@ -501,7 +504,7 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
                                 SourcePosition = rayStart,
                                 ForcePosition = collector.ClosestHit.Position,
                                 ForceNormal = rayDir,
-                                ForceNormalPhysically = collector.ClosestHit.SurfaceNormal,
+                                ForceVector = -collector.ClosestHit.SurfaceNormal * bullet.RigidbodyPushForce,
                                 BaseDamage = bullet.EnergyAmount,
                                 CriticalDamage = bullet.EnergyAmount * bullet.CriticalMultiply  //ApplyCritical = true
                             });
@@ -533,7 +536,7 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
                     break;
             }
             //case BulletType.Projectile:
-            if (bullet.BulletType == BulletType.Projectile)
+            if (bullet.BulletType == BulletType.Projectile && !isHit)
             {
                 Entity projectile = ecb.Instantiate(bullet.ProjectileEntity);
 

@@ -8,7 +8,8 @@ namespace ImaginaryReactor
         public float3 SourcePosition;
         public float3 ForcePosition;
         public float3 ForceNormal;
-        public float3 ForceNormalPhysically;
+        public bool IsForcePoint;
+        public float3 ForceVector;
         public float BaseDamage;
         public float CriticalDamage;
     }

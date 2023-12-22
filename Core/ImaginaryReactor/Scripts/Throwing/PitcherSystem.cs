@@ -43,7 +43,7 @@ namespace ImaginaryReactor
             //    }
             //    //if (cc.ThrowRelease)
             //    //{
-            //    //    UnityEngine.Debug.Log("Release Granade");
+            //    //    UnityEngine.Debug.Log("Release Grenade");
             //    //    _ecb.RemoveComponent<Parent>(pitcher.ValueRW.CurrentGrabEntity);
             //    //    _ecb.SetComponent(pitcher.ValueRW.CurrentGrabEntity, new PhysicsVelocity()
             //    //    {
@@ -176,21 +176,21 @@ namespace ImaginaryReactor
             if (cc.ThrowRelease)
             {
                 cc.ThrowRelease = false;
-                Entity granade = ecb.Instantiate(pitcher.GrabEntity);
+                Entity grenade = ecb.Instantiate(pitcher.GrabEntity);
 
-                ecb.SetComponent(granade , new LocalTransform()
+                ecb.SetComponent(grenade , new LocalTransform()
                 {
                     Position = sights.MuzzlePosition,//rayStart + rayDir * bullet.HitscanRange,
                     Rotation = quaternion.LookRotation(sights.MuzzleForward,new float3(0,1,0)),//(rayDir, rayDir.y > 0.99f ? transformForward * -1 : new float3(0, 1, 0)),
                     Scale = 1
                 }
                 );
-                ecb.SetComponent(granade , new PhysicsVelocity() { Linear = sights.MuzzleForward * pitcher.ThrowingPower});
+                ecb.SetComponent(grenade , new PhysicsVelocity() { Linear = sights.MuzzleForward * pitcher.ThrowingPower});
                 //if (bullet.MagicIFF_Key != ColliderKey.Empty)
                 //{
-                //    ecb.AddComponent(granade , new MagicIFF() { Key = bullet.MagicIFF_Key });
+                //    ecb.AddComponent(grenade , new MagicIFF() { Key = bullet.MagicIFF_Key });
                 //}
-                //ecb.AddComponent(granade , new TriggedWarheadData()
+                //ecb.AddComponent(grenade , new TriggedWarheadData()
                 //{
                 //    FiredPosition = rayStart,
                 //    WarheadForward = rayDir,

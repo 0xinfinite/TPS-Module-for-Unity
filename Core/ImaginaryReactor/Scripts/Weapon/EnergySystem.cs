@@ -28,10 +28,12 @@ namespace ImaginaryReactor {
         public void OnUpdate(ref SystemState state)
         {
             var ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            foreach (var (energy, mass, velocity) in SystemAPI.Query<Energy, PhysicsMass, RefRW<PhysicsVelocity>>().WithAll<Energy, PhysicsMass, PhysicsVelocity>())
+            foreach (var (energy, mass, velocity,entity) in SystemAPI.Query<Energy, PhysicsMass, RefRW<PhysicsVelocity>>().WithAll<Energy, PhysicsMass, PhysicsVelocity>()
+                .WithEntityAccess())
             {
-                float3 impulse = energy.ForceNormal * energy.BaseDamage;
+                float3 impulse = energy.ForceVector;
                 velocity.ValueRW.ApplyImpulse(in mass, in mass.Transform.pos, in mass.Transform.rot, in impulse, in energy.ForcePosition);
+                ecb.RemoveComponent<Energy>(entity);
             }
             foreach (var (energy, hitbox) in SystemAPI.Query<Energy, Hitbox>().WithAll<Energy, Hitbox>())
             {
