@@ -25,9 +25,12 @@ namespace ImaginaryReactor
         public float VaultDuration = 0;
         public Vector3 VaultOffset = Vector3.zero;
         public float ClimbMaxHeight = 0.2f;
+        public float TrackingOffset = 1.5f;
 
         //public LayerMask layerMask;
         public PhysicsCategoryTags AimRayFilter;
+        public PhysicsCategoryTags TrackingRayFilter;
+        public PhysicsCategoryTags ObstacleFilter;
         //public GameObject[] IgnoreHitboxList;
 
         public class Baker : Baker<ThirdPersonCharacterAuthoring>
@@ -42,15 +45,19 @@ namespace ImaginaryReactor
                     MuzzleEntity = GetEntity(authoring.muzzle, TransformUsageFlags.Dynamic),
                     LaserPointEntity = GetEntity(authoring.laserPoint, TransformUsageFlags.Dynamic),
                     FollowedCameraEntity = GetEntity(authoring.targetOrbitCamera, TransformUsageFlags.Dynamic),
-                    RayFilter = new CollisionFilter() { BelongsTo = authoring.AimRayFilter.Value, CollidesWith = authoring.AimRayFilter.Value } //FilterConversion.LayerMaskToFilter(authoring.layerMask) //new CollisionFilter() { BelongsTo = 1u, CollidesWith = (uint)authoring.layerMask.value }
+                    RayFilter = new CollisionFilter() { BelongsTo = authoring.AimRayFilter.Value, CollidesWith = authoring.AimRayFilter.Value }, //FilterConversion.LayerMaskToFilter(authoring.layerMask) //new CollisionFilter() { BelongsTo = 1u, CollidesWith = (uint)authoring.layerMask.value }
+                    TrackingRayFilter = new CollisionFilter() { BelongsTo = authoring.TrackingRayFilter.Value, CollidesWith = authoring.TrackingRayFilter.Value },
+                    ObstacleFilter = new CollisionFilter() { BelongsTo = authoring.ObstacleFilter.Value, CollidesWith = authoring.ObstacleFilter.Value }
                    //, CurrentSwitchShoulderViewOffset = quaternion.identity
                    //, TargetSwitchShoulderViewOffset = quaternion.identity
                    ,
                     DefaultShoulderViewOffset = quaternion.identity
                     , AlternativeShoulderViewOffset = quaternion.identity,
-                    FirstPersonZoomOffset = quaternion.identity
+                    FirstPersonZoomOffset = quaternion.identity,
                     //LeftShoulderViewOffset = quaternion.identity,
                     //RightShoulderViewOffset = quaternion.identity
+                    TrackingOffset = authoring.TrackingOffset
+                    //, TrackingOffset = new float2(0.5f,0)
                 });
 
 

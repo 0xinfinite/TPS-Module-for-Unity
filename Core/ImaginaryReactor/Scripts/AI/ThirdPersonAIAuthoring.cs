@@ -63,6 +63,7 @@ namespace ImaginaryReactor
                     //Filter = new CollisionFilter() { BelongsTo = authoring.BelongsTo.Value, CollidesWith = authoring.CollidesWith.Value },
                     ReceivedSignalInfo = new float4(0, 0, 0, -1),
                     IFF_Key = authoring.IFF_Key.Value,
+                    PrevPosition =authoring.transform.position
                 });
                 //AddComponent(entity, new HeardSound() { Recognized = false , SoundSource = new float3(-100,-100,-100)});
 
@@ -86,6 +87,7 @@ namespace ImaginaryReactor
         public float3 FinalDesirePositionToLook;
         public float3 TargetRealPosition;
         public float3 TargetRealVelocity;
+        public float3 PrevPosition;
         public float3 DesirePositionToMove;
         public float3 AimOffset;
         //public CollisionFilter Filter;

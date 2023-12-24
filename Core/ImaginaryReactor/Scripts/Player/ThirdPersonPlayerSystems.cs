@@ -78,11 +78,17 @@ namespace ImaginaryReactor {
 
                     float ads = input.Jumper.ADS.ReadValue<float>();
                     playerInputs.ValueRW.CameraZoomInput = ads;
-                    UnityEngine.Debug.Log("ADS : "+ads);
-                    playerInputs.ValueRW.CameraLookInput = input.Jumper.Look.ReadValue<Vector2>()
-                        * math.lerp(1,0.25f,ads) ;//new float2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+                    //UnityEngine.Debug.Log("ADS : "+ads);
+                    playerInputs.ValueRW.CameraLookInput = input.Jumper.Look.ReadValue<Vector2>();
+                        //* math.lerp(1,0.25f,ads) ;//new float2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
                     //playerInputs.ValueRW.CameraZoomInput = -Input.mouseScrollDelta.y;
-                    
+                    float verticalDeadzone = 0.1f* (1-ads);
+                    playerInputs.ValueRW.CameraLookInput.y =
+                         math.abs(playerInputs.ValueRW.CameraLookInput.y) < verticalDeadzone ? 0 :
+                        (playerInputs.ValueRW.CameraLookInput.y > 0 ? 
+                        math.remap(verticalDeadzone, 1,0,1, playerInputs.ValueRW.CameraLookInput.y) :
+                        math.remap(-verticalDeadzone, -1, 0, -1, playerInputs.ValueRW.CameraLookInput.y));
+
 
                     // For button presses that need to be queried during fixed update, use the "FixedInputEvent" helper struct.
                     // This is part of a strategy for proper handling of button press events that are consumed during the fixed update group

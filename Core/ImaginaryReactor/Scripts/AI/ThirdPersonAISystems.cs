@@ -215,6 +215,12 @@ public partial  struct DesireJob : IJobEntity
             float3 moveVector = brain.DesirePositionToMove - ltw.Position;
             moveInput = math.normalizesafe (moveVector) * math.saturate( math.length( moveVector)-0.1f);
             moveInput = math.rotate(math.inverse(quaternion.LookRotation(ltw.Forward, new float3(0,1,0))) , moveInput);
+                if(math.length(moveVector) < 0.1f)
+                {
+                    float3 tempPos = brain.DesirePositionToMove;
+                    brain.DesirePositionToMove = brain.PrevPosition;
+                    brain.PrevPosition = tempPos;
+                }
 
             float3 cameraTargetDir = math.lerp(camLTW.Value.InverseTransformPoint(ltw.Position + ltw.Forward), 
                 math.normalizesafe( camLTW.Value.InverseTransformPoint(in targetLookPosition)),

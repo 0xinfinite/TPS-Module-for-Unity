@@ -16,6 +16,8 @@ namespace ImaginaryReactor
         public Entity LaserPointEntity;
         //public Entity WeaponEntity;
         public CollisionFilter RayFilter;
+        public CollisionFilter TrackingRayFilter;
+        public CollisionFilter ObstacleFilter;
 
         [HideInInspector]
         public float3 MuzzlePosition;
@@ -34,6 +36,13 @@ namespace ImaginaryReactor
         [HideInInspector]
         public float3 LaserPointerPosition;
         //[HideInInspector]
+        public float3 CameraMovementDirection;
+        public float2 TrackingAngle;
+        public float TrackingOffset;
+        public float3 TargetVector;
+        public float3 TargetLocalVector;
+        public float CurrentlyTracking;
+        //[HideInInspector]
         //public quaternion RightShoulderViewOffset;
         //[HideInInspector]
         //public quaternion LeftShoulderViewOffset;
@@ -49,6 +58,7 @@ namespace ImaginaryReactor
             {
                 //TargetSwitchShoulderViewOffset = quaternion.identity,
                 //CurrentSwitchShoulderViewOffset = quaternion.identity
+                TrackingOffset = 1
             };
             return c;
         }

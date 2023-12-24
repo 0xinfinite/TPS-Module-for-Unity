@@ -14,6 +14,8 @@ namespace ImaginaryReactor {
     [UpdateBefore(typeof(EndSimulationEntityCommandBufferSystem))]
     public partial struct OrbitCameraSystem : ISystem
     {
+    
+
         public struct CameraObstructionHitsCollector : ICollector<ColliderCastHit>
         {
             public bool EarlyOutOnFirstHit => false;
@@ -91,7 +93,8 @@ namespace ImaginaryReactor {
                 KinematicCharacterBodyLookup = SystemAPI.GetComponentLookup<KinematicCharacterBody>(true),
                 SightsLookup = SystemAPI.GetComponentLookup<AimingSights>(false),
                 TelescopeLookup = SystemAPI.GetComponentLookup<Telescope>(false),
-                MainCameraLookup = SystemAPI.GetComponentLookup<MainEntityCamera>(false)
+                MainCameraLookup = SystemAPI.GetComponentLookup<MainEntityCamera>(false),
+                PlayerTagLookup = SystemAPI.GetComponentLookup<PlayerTag>(false),
             };
             job.Schedule();
         }
@@ -109,6 +112,7 @@ namespace ImaginaryReactor {
             public ComponentLookup<AimingSights> SightsLookup;
             public ComponentLookup<Telescope> TelescopeLookup;
             public ComponentLookup<MainEntityCamera> MainCameraLookup;
+            public ComponentLookup<PlayerTag> PlayerTagLookup;
 
             void Execute(
                 Entity entity,
@@ -141,6 +145,13 @@ namespace ImaginaryReactor {
                 // if there is a followed entity, place the camera relatively to it
                 if (LocalToWorldLookup.TryGetComponent(cameraControl.FollowedCharacterEntity, out LocalToWorld characterLTW))
                 {
+                    bool hasSights = false;
+                    AimingSights sights = default;
+                    if (SightsLookup.HasComponent(cameraControl.FollowedCharacterEntity))
+                    {
+                        hasSights = true;
+                        sights = SightsLookup[cameraControl.FollowedCharacterEntity];
+                    }
                     // Select the real camera target
                     LocalToWorld targetEntityLocalToWorld = default;
                     if (CameraTargetLookup.TryGetComponent(cameraControl.FollowedCharacterEntity, out CameraTarget cameraTarget) &&
@@ -163,20 +174,230 @@ namespace ImaginaryReactor {
                             KinematicCharacterUtilities.AddVariableRateRotationFromFixedRateRotation(ref rot, characterBody.RotationFromParent, DeltaTime, characterBody.LastPhysicsUpdateDeltaTime);
                             orbitCamera.PlanarForward = math.normalizesafe(MathUtilities.ProjectOnPlane(MathUtilities.GetForwardFromRotation(rot), targetEntityLocalToWorld.Up));
                         }
-
+                        float zoomMultiply = math.remap(0, 1, 1, 0.25f,  cameraControl.Zoom);
                         // Yaw
-                        float yawAngleChange = cameraControl.Look.x * orbitCamera.RotationSpeed;
+                        float yawAngleChange = cameraControl.Look.x * zoomMultiply * orbitCamera.RotationSpeed;
+
+                        float3 vectorToTarget = (sights.TargetVector + //sights.TargetLocalVector
+                                                                      new float3(0,sights.TargetLocalVector.y,0)
+                                                                    
+                            ) - LocalToWorldLookup[entity].Position;
+
+                        //if (hasSights)
+                        //{
+                        //    yawAngleChange += sights.TargetVector.x * sights.CurrentlyTracking;
+                        //}
+                        //float2 aimAssistStrength = sights.CurrentlyTracking;
+                        //if (hasSights
+                        //    && math.abs(sights.TrackingAngle.x) > 0 &&
+                        //    !((sights.TrackingAngle.x > 0 && yawAngleChange < 0) || (sights.TrackingAngle.x < 0 && yawAngleChange > 0))
+                        //    )
+                        //{
+                        //    float targetInputForTracking = sights.TrackingAngle.x / orbitCamera.RotationSpeed;
+                        //    //UnityEngine.Debug.Log(math.distance(cameraControl.Look.x, targetInputForTracking));
+
+                        //    if (sights.TrackingAngle.x > 0)
+                        //    {
+                        //        if (yawAngleChange < sights.TrackingAngle.x)
+                        //        {
+                        //            aimAssistStrength.x = math.smoothstep(0, 0.9f,//math.sqrt(math.sin( //math.smoothstep(0, 0.9f, 
+                        //                math.saturate(math.remap(0, math.max(0.1f, targetInputForTracking - 0.1f), 0, 1, cameraControl.Look.x))//;
+                        //                );// * math.PI * 0.5f);
+                        //        }
+                        //        else
+                        //        {
+                        //            aimAssistStrength.x =// math.sqrt(math.cos(//
+                        //               math.smoothstep(0, 0.9f,
+                        //                 math.saturate(math.remap(math.min(targetInputForTracking + 0.1f, 0.9f), 1, 1, 0, cameraControl.Look.x))//;
+                        //                );// * math.PI * 0.5f) * 0.9f;
+                        //            //UnityEngine.Debug.Log(t);
+                        //        }
+                        //    }
+                        //    else
+                        //    {
+                        //        if (sights.TrackingAngle.x < yawAngleChange)
+                        //        {
+                        //            aimAssistStrength.x = math.smoothstep(0, 0.9f, //math.sqrt(math.sin( //math.smoothstep(0, 0.9f, 
+                        //              math.saturate(math.remap(0, math.max(0.1f, targetInputForTracking * -1 - 0.1f), 0, 1, cameraControl.Look.x * -1))//;
+                        //              );// * math.PI * 0.5f);
+                        //        }
+                        //        else
+                        //        {
+                        //            aimAssistStrength.x =// math.sqrt(math.cos(//
+                        //               math.smoothstep(0, 0.9f,
+                        //                 math.saturate(math.remap(math.min(targetInputForTracking * -1 + 0.1f, 0.9f), 1, 1, 0, cameraControl.Look.x * -1))//;
+                        //                );// * math.PI * 0.5f) * 0.9f;
+                        //            //UnityEngine.Debug.Log(t);
+                        //            // UnityEngine.Debug.Log(t);
+                        //        }
+                        //    }
+                        //    //aimAssistStrength.x = 1;
+                        //    //yawAngleChange = math.lerp(yawAngleChange, sights.TrackingAngle.x * sights.TrackingOffset, sights.CurrentlyTracking);
+                        //    //yawAngleChange = math.lerp(yawAngleChange, sights.TrackingAngle.x, sights.CurrentlyTracking * t);
+                        //    //aimAssistStrength.x *= sights.CurrentlyTracking;
+                        //}
+
                         quaternion yawRotation = quaternion.Euler(targetEntityLocalToWorld.Up * math.radians(yawAngleChange));
-                        orbitCamera.PlanarForward = math.rotate(yawRotation, orbitCamera.PlanarForward);
+                        //if (hasSights & sights.CurrentlyTracking > 0)
+                        //{
+                        //    orbitCamera.PlanarForward = math.normalizesafe( MathUtilities.ProjectOnPlane((sights.TargetVector- LocalToWorldLookup[entity].Position
+                        //        ), new float3(0, 1, 0)));
+                        //}
+                        //else
+                        //{
+                            orbitCamera.PlanarForward = math.normalizesafe(
+                                //math.lerp(
+                                    math.rotate(yawRotation, orbitCamera.PlanarForward)//,
+                                //math.normalizesafe(MathUtilities.ProjectOnPlane(vectorToTarget, new float3(0, 1, 0)))
+                                //, aimAssistStrength.x)
+                                );
+                        //}
 
                         // Pitch
-                        orbitCamera.PitchAngle += -cameraControl.Look.y * orbitCamera.RotationSpeed;
-                        orbitCamera.PitchAngle = math.clamp(orbitCamera.PitchAngle, orbitCamera.MinVAngle, orbitCamera.MaxVAngle);
-                        quaternion pitchRotation = quaternion.Euler(math.right() * math.radians(orbitCamera.PitchAngle));
+                        float pitchAngleChange = cameraControl.Look.y * zoomMultiply * orbitCamera.RotationSpeed;
+                        //if (hasSights)
+                        //{
+                        //    pitchAngleChange += sights.TargetVector.y * sights.TargetVector.w;
+                        //}
+                        //if (hasSights
+                        //    && math.abs(sights.TrackingAngle.y) > 0 &&
+                        //   !((sights.TrackingAngle.y > 0 && pitchAngleChange < 0) || (sights.TrackingAngle.y < 0 && pitchAngleChange > 0))
+                        //   )
+                        //{
+                        //    float targetInputForTracking = sights.TrackingAngle.y / orbitCamera.RotationSpeed;
+                        //    //UnityEngine.Debug.Log(math.distance(cameraControl.Look.y, targetInputForTracking));
+                        //    //float t = 0;
+                        //    if (sights.TrackingAngle.y > 0)
+                        //    {
+                        //        if (pitchAngleChange < sights.TrackingAngle.y)
+                        //        {
+                        //            aimAssistStrength.y = math.smoothstep(0, 0.9f,//math.sqrt(math.sin( //math.smoothstep(0, 0.9f, 
+                        //                math.saturate(math.remap(0, math.max(0.1f, targetInputForTracking - 0.1f), 0, 1, cameraControl.Look.y))//;
+                        //                );// * math.PI * 0.5f);
+                        //        }
+                        //        else
+                        //        {
+                        //            aimAssistStrength.y =// math.sqrt(math.cos(//
+                        //               math.smoothstep(0, 0.9f,
+                        //                 math.saturate(math.remap(math.min(targetInputForTracking + 0.1f, 0.9f), 1, 1, 0, cameraControl.Look.y))//;
+                        //                );// * math.PI * 0.5f) * 0.9f;
+                        //            //UnityEngine.Debug.Log(t);
+                        //        }
+                        //    }
+                        //    else
+                        //    {
+                        //        if (sights.TrackingAngle.y < pitchAngleChange)
+                        //        {
+                        //            aimAssistStrength.y = math.smoothstep(0, 0.9f, //math.sqrt(math.sin( //math.smoothstep(0, 0.9f, 
+                        //              math.saturate(math.remap(0, math.max(0.1f, targetInputForTracking * -1 - 0.1f), 0, 1, cameraControl.Look.y * -1))//;
+                        //              );// * math.PI * 0.5f);
+                        //        }
+                        //        else
+                        //        {
+                        //            aimAssistStrength.y =// math.sqrt(math.cos(//
+                        //               math.smoothstep(0, 0.9f,
+                        //                 math.saturate(math.remap(math.min(targetInputForTracking * -1 + 0.1f, 0.9f), 1, 1, 0, cameraControl.Look.y * -1))//;
+                        //                );// * math.PI * 0.5f) * 0.9f;
+                        //            //UnityEngine.Debug.Log(t);
+                        //            // UnityEngine.Debug.Log(t);
+                        //        }
+                        //    }
+                        //    //aimAssistStrength.y = 1;
+                        //    //pitchAngleChange = math.lerp(pitchAngleChange, sights.TrackingAngle.y, sights.CurrentlyTracking);
+                        //    //pitchAngleChange = math.lerp(pitchAngleChange, sights.TrackingAngle.y, sights.CurrentlyTracking * 1);
+                        //    //aimAssistStrength.y *= sights.CurrentlyTracking;
+                        //}
+                        //aimAssistStrength *= 0.5f;
 
-                        // Final rotation
+                        orbitCamera.PitchAngle += -pitchAngleChange;
+                        //if(hasSights)
+                        //{
+                        //    orbitCamera.PitchAngle += sights.TrackingAngle.y * sights.TrackingOffset * DeltaTime;
+                        //}
+
+                        //if (hasSights & sights.TargetPosition.w > 0)
+                        //{
+                        // orbitCamera.PlanarForward = math.normalizesafe(sights.TargetPosition.xyz - targetEntityLocalToWorld.Position);
+                        //}
+                        //else
+                        //{
+                        //    orbitCamera.PitchAngle 
+                        //}
+
+                        float aimAssist = sights.CurrentlyTracking;
+                        float2 targetInputForTracking = math.radians( sights.TrackingAngle);
+                        if (aimAssist < 0.1f ||
+                            math.lengthsq(sights.TrackingAngle) < 0.01f || math.abs( cameraControl.Look.x) < 0.01f ||
+                            //((sights.TrackingAngle.y > 0 && pitchAngleChange < 0) || (sights.TrackingAngle.y < 0 && pitchAngleChange > 0)) ||
+                            ((sights.TrackingAngle.x > 0 && yawAngleChange < 0) || (sights.TrackingAngle.x < 0 && yawAngleChange > 0)))
+                        {
+                            //aimAssistStrength = 0;
+                            aimAssist = 0;
+                        }
+                        else
+                        {
+                            float x = cameraControl.Look.x * zoomMultiply;
+                            float a = (targetInputForTracking.x /  orbitCamera.RotationSpeed);
+                            aimAssist *= (x < a+0.5f&&x>a-0.5f) ? math.cos((x * math.PI * 2) - (a * math.PI * 2)) * 0.5f + 0.5f:0;
+                            
+                            //if (PlayerTagLookup.HasComponent(cameraControl.FollowedCharacterEntity))
+                            //    UnityEngine.Debug.Log(x+" / "+a+" / "+aimAssist);
+                            //float lookXAbs = math.abs(cameraControl.Look.x);
+                            //float targetXAbs = math.abs(targetInputForTracking.x);
+                            //if (lookXAbs < targetXAbs)
+                            //{
+                            //    aimAssist *= math.saturate(math.remap(0, targetXAbs, 0, 1, lookXAbs));
+                            //}
+                            //else
+                            //{
+                            //    aimAssist *= math.saturate(math.remap(targetXAbs, 1, 1, 0, lookXAbs));
+                            //}
+                        }
+                        //aimAssist *= aimAssistStrength.x;
+
+                        //aimAssist = math.saturate(aimAssist);
+                        //aimAssistStrength *= math.abs(targetInputForTracking.x)> cameraControl.Look.x?1- math.abs(cameraControl.Look) : math.abs(cameraControl.Look);
+
+                        //aimAssistStrength *= math.remap( 0,orbitCamera.RotationSpeed,1,0,
+                        //    math.distance(new float2(yawAngleChange, pitchAngleChange) ,sights.TrackingAngle ));
+
+
+                        orbitCamera.PitchAngle = math.clamp(orbitCamera.PitchAngle, orbitCamera.MinVAngle, orbitCamera.MaxVAngle);
+                        quaternion pitchRotation = quaternion.Euler(math.right() * 
+                             math.radians(orbitCamera.PitchAngle)
+                            );
+
+                                                // Final rotation
                         rot = quaternion.LookRotationSafe(orbitCamera.PlanarForward, targetEntityLocalToWorld.Up);
-                        orbitCamera.ThirdPersonRotation = math.mul(rot, pitchRotation);
+
+                        float3 directionToTarget = math.normalizesafe(vectorToTarget);
+                        orbitCamera.ThirdPersonRotation =
+                            math.nlerp(
+                            math.mul(rot, pitchRotation),
+                            
+                               quaternion.LookRotationSafe(directionToTarget, directionToTarget.y>0.99? -orbitCamera.PlanarForward : math.up()
+                               ) //math.normalizesafe(MathUtilities.ProjectOnPlane(vectorToTarget, new float3(0, 1, 0)))
+                            
+                            ,
+                            aimAssist//math.saturate( math.length(aimAssistStrength )) 
+                            );
+                        //if (PlayerTagLookup.HasComponent(cameraControl.FollowedCharacterEntity))
+                        //    UnityEngine.Debug.Log(aimAssist);
+
+                        orbitCamera.PlanarForward = math.normalizesafe(MathUtilities.ProjectOnPlane(MathUtilities.GetForwardFromRotation(orbitCamera.ThirdPersonRotation), targetEntityLocalToWorld.Up));
+                        float upDot = MathUtilities.GetForwardFromRotation(orbitCamera.ThirdPersonRotation).y;
+                        orbitCamera.PitchAngle = math.degrees(math.asin(math.abs(upDot)));  // math.degrees( MathUtilities.DotRatioToAngleRadians(math.dot(orbitCamera.PlanarForward,math.up())));
+
+                        //float upDot = MathUtilities.GetForwardFromRotation(orbitCamera.ThirdPersonRotation).y;//math.dot(MathUtilities.GetForwardFromRotation(orbitCamera.ThirdPersonRotation), math.up());
+                        //UnityEngine.Debug.Log("Pitch Angle : " +// math.sqrt(
+                        //     math.degrees(math.asin(math.abs(upDot)) )
+                        //    //* (upDot > 0 ? 90 : -90) //math.degrees(MathUtilities.DotRatioToAngleRadians(math.dot(orbitCamera.PlanarForward, math.up())))
+                        //    );
+
+                        if (hasSights)
+                        {
+                            sights.CameraMovementDirection = math.mul(orbitCamera.ThirdPersonRotation, orbitCamera.PlanarForward);
+                        }
                     }
 
                     float3 cameraForward = MathUtilities.GetForwardFromRotation(orbitCamera.ThirdPersonRotation);//transform.Rotation);
@@ -295,9 +516,9 @@ namespace ImaginaryReactor {
 
                     //UnityEngine.Debug.Log(shoulderRate);
 
-                    if (scopeFirstPerson && SightsLookup.HasComponent(cameraControl.FollowedCharacterEntity))
+                    if (scopeFirstPerson && hasSights )//&& SightsLookup.HasComponent(cameraControl.FollowedCharacterEntity))
                     {
-                            AimingSights sights = SightsLookup[cameraControl.FollowedCharacterEntity];
+                            //AimingSights sights = SightsLookup[cameraControl.FollowedCharacterEntity];
                         bool offsetChanged = false;
                         bool toggleZoom = cameraControl.ToggleZoom;
                         //float3 targetDir = float3.zero;
@@ -347,10 +568,10 @@ namespace ImaginaryReactor {
                         //}
                         
 
-                        if (offsetChanged)
-                        {
-                            SightsLookup[cameraControl.FollowedCharacterEntity] = sights; 
-                        }
+                        //if (offsetChanged)
+                        //{
+                        //    SightsLookup[cameraControl.FollowedCharacterEntity] = sights; 
+                        //}
 
                         //if (toggleZoom)
                         {
@@ -412,6 +633,12 @@ namespace ImaginaryReactor {
                     transform.Position = scopeFirstPerson ?
                         math.lerp(thirdPersonPosition, targetEntityLocalToWorld.Position, zoomProgress)
                         : thirdPersonPosition;
+
+                    if (hasSights)
+                    {
+
+                        SightsLookup[cameraControl.FollowedCharacterEntity] = sights;
+                    }
 
                     // Manually calculate the LocalToWorld since this is updating after the Transform systems, and the LtW is what rendering uses
                     LocalToWorld cameraLocalToWorld = new LocalToWorld();

@@ -437,136 +437,248 @@ public struct RayCastObstructionHitsCollector : ICollector<RaycastHit>
                             //PhysicsWorld
                             var buffer = entityManager.GetBuffer<IgnoreHitboxData>(entity);
                             float3 transformForward = transform.Forward();
-                            BulletDamage( transformForward, ref rayDir,ref  rayStart,ref bullet,ref buffer,ref ecb,ref PhysicsWorld);
-                        }
-                    }
+                            //BulletDamage( transformForward, ref rayDir,ref  rayStart,ref bullet,ref buffer,ref ecb,ref PhysicsWorld);
 
-                    }
-
-
-                }
-
-       
-        }
-
-        [BurstCompile]
-        public static void BulletDamage(in float3 transformForward, ref float3 rayDir, ref float3 rayStart,ref Bullet bullet, ref DynamicBuffer<IgnoreHitboxData> buffer,
-          ref EntityCommandBuffer ecb,ref PhysicsWorld physicsWorld)
-        {
-            bool isHitscan = false;
-            bool isHit = false;
-            switch (bullet.BulletType)
-            {
-                case BulletType.Projectile:
-                case BulletType.Hitscan:
-                    if (bullet.BulletType == BulletType.Hitscan)
-                    { isHitscan = true; }
-                    RayCastObstructionHitsCollector collector = new RayCastObstructionHitsCollector(buffer, rayDir);
-                    RaycastInput input = new RaycastInput()
-                    {
-                        Start = rayStart,
-                        End = rayStart + rayDir * bullet.HitscanRange,
-                        Filter = bullet.HitscanFilter
-                    };
-                    physicsWorld.CastRay(input, ref collector);//CapsuleCastCustom(rayStart, rayStart, 0.001f, )
-                                                               //.SphereCastCustom<RayCastObstructionHitsCollector>(rayStart, 0.001f, rayDir, bullet.HitscanRange, ref collector,
-                                                               //bullet.HitscanFilter, QueryInteraction.IgnoreTriggers);
-
-                    if (collector.NumHits > 0)
-                    {
-                        isHit = true;
-                        //UnityEngine.Debug.Log("closest hit position : " + collector.ClosestHit.Position);
-                        if (bullet.ImpactParticleEntity != Entity.Null)
-                        {
-                            Entity particleEntity = ecb.Instantiate(bullet.ImpactParticleEntity);
-                            ecb.SetComponent(particleEntity, new LocalTransform()
+                            bool isHitscan = false;
+                            bool isHit = false;
+                            switch (bullet.BulletType)
                             {
-                                Position = collector.ClosestHit.Position,
-                                Rotation = //new quaternion(0, 0, 0, 1), //
-                                           quaternion.LookRotation(collector.ClosestHit.SurfaceNormal,
-                                collector.ClosestHit.SurfaceNormal.y > 0.999f ? rayDir : new float3(0, 1, 0)  //math.cross(collector.ClosestHit.SurfaceNormal, math.cross( new float3(0, 1, 0), collector.ClosestHit.SurfaceNormal))
-                                ),
-                                Scale = 1
+                                case BulletType.Projectile:
+                                case BulletType.Hitscan:
+                                    if (bullet.BulletType == BulletType.Hitscan)
+                                    { isHitscan = true; }
+                                    RayCastObstructionHitsCollector collector = new RayCastObstructionHitsCollector(buffer, rayDir);
+                                    RaycastInput input = new RaycastInput()
+                                    {
+                                        Start = rayStart,
+                                        End = rayStart + rayDir * bullet.HitscanRange,
+                                        Filter = bullet.HitscanFilter
+                                    };
+                                    PhysicsWorld.CastRay(input, ref collector);//CapsuleCastCustom(rayStart, rayStart, 0.001f, )
+                                                                               //.SphereCastCustom<RayCastObstructionHitsCollector>(rayStart, 0.001f, rayDir, bullet.HitscanRange, ref collector,
+                                                                               //bullet.HitscanFilter, QueryInteraction.IgnoreTriggers);
+
+                                    if (collector.NumHits > 0)
+                                    {
+                                        isHit = true;
+                                        //UnityEngine.Debug.Log("closest hit position : " + collector.ClosestHit.Position);
+                                        if (bullet.ImpactParticleEntity != Entity.Null)
+                                        {
+                                            Entity particleEntity = ecb.Instantiate(bullet.ImpactParticleEntity);
+                                            ecb.SetComponent(particleEntity, new LocalTransform()
+                                            {
+                                                Position = collector.ClosestHit.Position,
+                                                Rotation = //new quaternion(0, 0, 0, 1), //
+                                                           quaternion.LookRotation(collector.ClosestHit.SurfaceNormal,
+                                                collector.ClosestHit.SurfaceNormal.y > 0.999f ? rayDir : new float3(0, 1, 0)  //math.cross(collector.ClosestHit.SurfaceNormal, math.cross( new float3(0, 1, 0), collector.ClosestHit.SurfaceNormal))
+                                                ),
+                                                Scale = 1
+                                            }
+                                        );
+                                            //ecb.AddComponent(particleEntity, new LocalToWorld()
+                                            //{
+                                            //    Value = new float4x4(
+                                            //    quaternion.LookRotation(collector.ClosestHit.SurfaceNormal, new float3(0, 1, 0)), collector.ClosestHit.Position)
+                                            //});
+                                        }
+
+                                        ColliderKey hitColliderKey = collector.ClosestHit.Material.CustomTags;
+                                        if (hitColliderKey != bullet.MagicIFF_Key)
+                                        {
+                                            ecb.AddComponent(collector.ClosestHit.Entity, new Energy()
+                                            {
+                                                SourcePosition = rayStart,
+                                                ForcePosition = collector.ClosestHit.Position,
+                                                ForceNormal = rayDir,
+                                                ForceVector = -collector.ClosestHit.SurfaceNormal * bullet.RigidbodyPushForce,
+                                                BaseDamage = bullet.EnergyAmount,
+                                                CriticalDamage = bullet.EnergyAmount * bullet.CriticalMultiply  //ApplyCritical = true
+                                            });
+
+
+                                        }
+                                        if (isHitscan)
+                                        {
+                                            var lineEntity = ecb.CreateEntity();
+                                            ecb.AddComponent(lineEntity, new HitscanLineComponent()
+                                            {
+                                                StartPos = rayStart,
+                                                EndPos = collector.ClosestHit.Position
+                                            });
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (isHitscan)
+                                        {
+                                            var lineEntity = ecb.CreateEntity();
+                                            ecb.AddComponent(lineEntity, new HitscanLineComponent()
+                                            {
+                                                StartPos = rayStart,
+                                                EndPos = input.End
+                                            });
+                                        }
+                                    }
+                                    break;
                             }
-                        );
-                            //ecb.AddComponent(particleEntity, new LocalToWorld()
-                            //{
-                            //    Value = new float4x4(
-                            //    quaternion.LookRotation(collector.ClosestHit.SurfaceNormal, new float3(0, 1, 0)), collector.ClosestHit.Position)
-                            //});
-                        }
-
-                        ColliderKey hitColliderKey = collector.ClosestHit.Material.CustomTags;
-                        if (hitColliderKey != bullet.MagicIFF_Key)
-                        {
-                            ecb.AddComponent(collector.ClosestHit.Entity, new Energy()
+                            //case BulletType.Projectile:
+                            if (bullet.BulletType == BulletType.Projectile && !isHit)
                             {
-                                SourcePosition = rayStart,
-                                ForcePosition = collector.ClosestHit.Position,
-                                ForceNormal = rayDir,
-                                ForceVector = -collector.ClosestHit.SurfaceNormal * bullet.RigidbodyPushForce,
-                                BaseDamage = bullet.EnergyAmount,
-                                CriticalDamage = bullet.EnergyAmount * bullet.CriticalMultiply  //ApplyCritical = true
-                            });
+                                Entity projectile = ecb.Instantiate(bullet.ProjectileEntity);
 
-
-                        }
-                        if (isHitscan)
-                        {
-                            var lineEntity = ecb.CreateEntity();
-                            ecb.AddComponent(lineEntity, new HitscanLineComponent()
-                            {
-                                StartPos = rayStart,
-                                EndPos = collector.ClosestHit.Position
-                            });
+                                ecb.SetComponent(projectile, new LocalTransform()
+                                {
+                                    Position = rayStart + rayDir * bullet.HitscanRange,
+                                    Rotation = quaternion.LookRotation(rayDir, rayDir.y > 0.99f ? transformForward * -1 : new float3(0, 1, 0)),
+                                    Scale = 1
+                                }
+                                );
+                                ecb.SetComponent(projectile, new PhysicsVelocity() { Linear = rayDir * bullet.ProjectileSpeed });
+                                if (bullet.MagicIFF_Key != ColliderKey.Empty)
+                                {
+                                    ecb.AddComponent(projectile, new MagicIFF() { Key = bullet.MagicIFF_Key });
+                                }
+                                ecb.AddComponent(projectile, new TriggedWarheadData()
+                                {
+                                    FiredPosition = rayStart,
+                                    WarheadForward = rayDir,
+                                    WarheadBaseDamage = bullet.EnergyAmount
+                                });
+                                var bufferOnProjectile = ecb.AddBuffer<IgnoreHitboxData>(projectile);
+                                for (int j = 0; j < buffer.Length; ++j)
+                                {
+                                    bufferOnProjectile.Add(buffer[j]);
+                                }
+                            }
                         }
                     }
-                    else
-                    {
-                        if (isHitscan)
-                        {
-                            var lineEntity = ecb.CreateEntity();
-                            ecb.AddComponent(lineEntity, new HitscanLineComponent()
-                            {
-                                StartPos = rayStart,
-                                EndPos = input.End
-                            });
-                        }
+
                     }
-                    break;
-            }
-            //case BulletType.Projectile:
-            if (bullet.BulletType == BulletType.Projectile && !isHit)
+
+
+                }
+
+            [BurstCompile]
+            public void BulletDamage(in float3 transformForward, ref float3 rayDir, ref float3 rayStart, ref Bullet bullet, ref DynamicBuffer<IgnoreHitboxData> buffer,
+           ref EntityCommandBuffer ecb, ref PhysicsWorld physicsWorld)
             {
-                Entity projectile = ecb.Instantiate(bullet.ProjectileEntity);
+                bool isHitscan = false;
+                bool isHit = false;
+                switch (bullet.BulletType)
+                {
+                    case BulletType.Projectile:
+                    case BulletType.Hitscan:
+                        if (bullet.BulletType == BulletType.Hitscan)
+                        { isHitscan = true; }
+                        RayCastObstructionHitsCollector collector = new RayCastObstructionHitsCollector(buffer, rayDir);
+                        RaycastInput input = new RaycastInput()
+                        {
+                            Start = rayStart,
+                            End = rayStart + rayDir * bullet.HitscanRange,
+                            Filter = bullet.HitscanFilter
+                        };
+                        physicsWorld.CastRay(input, ref collector);//CapsuleCastCustom(rayStart, rayStart, 0.001f, )
+                                                                   //.SphereCastCustom<RayCastObstructionHitsCollector>(rayStart, 0.001f, rayDir, bullet.HitscanRange, ref collector,
+                                                                   //bullet.HitscanFilter, QueryInteraction.IgnoreTriggers);
 
-                ecb.SetComponent(projectile, new LocalTransform()
-                {
-                    Position = rayStart + rayDir * bullet.HitscanRange,
-                    Rotation = quaternion.LookRotation(rayDir, rayDir.y > 0.99f ? transformForward * -1 : new float3(0, 1, 0)),
-                    Scale = 1
+                        if (collector.NumHits > 0)
+                        {
+                            isHit = true;
+                            //UnityEngine.Debug.Log("closest hit position : " + collector.ClosestHit.Position);
+                            if (bullet.ImpactParticleEntity != Entity.Null)
+                            {
+                                Entity particleEntity = ecb.Instantiate(bullet.ImpactParticleEntity);
+                                ecb.SetComponent(particleEntity, new LocalTransform()
+                                {
+                                    Position = collector.ClosestHit.Position,
+                                    Rotation = //new quaternion(0, 0, 0, 1), //
+                                               quaternion.LookRotation(collector.ClosestHit.SurfaceNormal,
+                                    collector.ClosestHit.SurfaceNormal.y > 0.999f ? rayDir : new float3(0, 1, 0)  //math.cross(collector.ClosestHit.SurfaceNormal, math.cross( new float3(0, 1, 0), collector.ClosestHit.SurfaceNormal))
+                                    ),
+                                    Scale = 1
+                                }
+                            );
+                                //ecb.AddComponent(particleEntity, new LocalToWorld()
+                                //{
+                                //    Value = new float4x4(
+                                //    quaternion.LookRotation(collector.ClosestHit.SurfaceNormal, new float3(0, 1, 0)), collector.ClosestHit.Position)
+                                //});
+                            }
+
+                            ColliderKey hitColliderKey = collector.ClosestHit.Material.CustomTags;
+                            if (hitColliderKey != bullet.MagicIFF_Key)
+                            {
+                                ecb.AddComponent(collector.ClosestHit.Entity, new Energy()
+                                {
+                                    SourcePosition = rayStart,
+                                    ForcePosition = collector.ClosestHit.Position,
+                                    ForceNormal = rayDir,
+                                    ForceVector = -collector.ClosestHit.SurfaceNormal * bullet.RigidbodyPushForce,
+                                    BaseDamage = bullet.EnergyAmount,
+                                    CriticalDamage = bullet.EnergyAmount * bullet.CriticalMultiply  //ApplyCritical = true
+                                });
+
+
+                            }
+                            if (isHitscan)
+                            {
+                                var lineEntity = ecb.CreateEntity();
+                                ecb.AddComponent(lineEntity, new HitscanLineComponent()
+                                {
+                                    StartPos = rayStart,
+                                    EndPos = collector.ClosestHit.Position
+                                });
+                            }
+                        }
+                        else
+                        {
+                            if (isHitscan)
+                            {
+                                var lineEntity = ecb.CreateEntity();
+                                ecb.AddComponent(lineEntity, new HitscanLineComponent()
+                                {
+                                    StartPos = rayStart,
+                                    EndPos = input.End
+                                });
+                            }
+                        }
+                        break;
                 }
-                );
-                ecb.SetComponent(projectile, new PhysicsVelocity() { Linear = rayDir * bullet.ProjectileSpeed });
-                if (bullet.MagicIFF_Key != ColliderKey.Empty)
+                //case BulletType.Projectile:
+                if (bullet.BulletType == BulletType.Projectile && !isHit)
                 {
-                    ecb.AddComponent(projectile, new MagicIFF() { Key = bullet.MagicIFF_Key });
+                    Entity projectile = ecb.Instantiate(bullet.ProjectileEntity);
+
+                    ecb.SetComponent(projectile, new LocalTransform()
+                    {
+                        Position = rayStart + rayDir * bullet.HitscanRange,
+                        Rotation = quaternion.LookRotation(rayDir, rayDir.y > 0.99f ? transformForward * -1 : new float3(0, 1, 0)),
+                        Scale = 1
+                    }
+                    );
+                    ecb.SetComponent(projectile, new PhysicsVelocity() { Linear = rayDir * bullet.ProjectileSpeed });
+                    if (bullet.MagicIFF_Key != ColliderKey.Empty)
+                    {
+                        ecb.AddComponent(projectile, new MagicIFF() { Key = bullet.MagicIFF_Key });
+                    }
+                    ecb.AddComponent(projectile, new TriggedWarheadData()
+                    {
+                        FiredPosition = rayStart,
+                        WarheadForward = rayDir,
+                        WarheadBaseDamage = bullet.EnergyAmount
+                    });
+                    var bufferOnProjectile = ecb.AddBuffer<IgnoreHitboxData>(projectile);
+                    for (int j = 0; j < buffer.Length; ++j)
+                    {
+                        bufferOnProjectile.Add(buffer[j]);
+                    }
                 }
-                ecb.AddComponent(projectile, new TriggedWarheadData()
-                {
-                    FiredPosition = rayStart,
-                    WarheadForward = rayDir,
-                    WarheadBaseDamage = bullet.EnergyAmount
-                });
-                var bufferOnProjectile = ecb.AddBuffer<IgnoreHitboxData>(projectile);
-                for (int j = 0; j < buffer.Length; ++j)
-                {
-                    bufferOnProjectile.Add(buffer[j]);
-                }
+
+                //return transform;
             }
 
-            //return transform;
         }
+
 
     }
 
