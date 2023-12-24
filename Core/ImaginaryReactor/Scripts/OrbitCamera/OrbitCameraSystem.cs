@@ -154,6 +154,7 @@ namespace ImaginaryReactor {
                     }
                     // Select the real camera target
                     LocalToWorld targetEntityLocalToWorld = default;
+                    LocalToWorld cameraLocalToWorld = LocalToWorldLookup[entity];
                     if (CameraTargetLookup.TryGetComponent(cameraControl.FollowedCharacterEntity, out CameraTarget cameraTarget) &&
                         LocalToWorldLookup.TryGetComponent(cameraTarget.TargetEntity, out LocalToWorld camTargetLTW))
                     {
@@ -178,10 +179,25 @@ namespace ImaginaryReactor {
                         // Yaw
                         float yawAngleChange = cameraControl.Look.x * zoomMultiply * orbitCamera.RotationSpeed;
 
-                        float3 vectorToTarget = (sights.TargetVector + //sights.TargetLocalVector
-                                                                      new float3(0,sights.TargetLocalVector.y,0)
-                                                                    
+                        if (sights.CurrentlyTracking > 0.1f && sights.CurrentlyTracking < 0.5f)
+                        {
+                            sights.CachedLookInput//.x
+                                = cameraControl.Look;//.x;
+                        }
+
+                        float3 vectorToTarget = (sights.TargetVector 
+                            - cameraLocalToWorld.Up * sights.TargetLocalVector.y - cameraLocalToWorld.Right * sights.TargetLocalVector.x*0.5f
+                            + cameraLocalToWorld.Up * (cameraControl.Look.y - sights.CachedLookInput.y) * sights.TrackingOffset //* sights.CurrentlyTracking
+                            + cameraLocalToWorld.Right * (cameraControl.Look.x - sights.CachedLookInput.x)
+                            //sights.TargetLocalVector
+                            //sights.TargetLocalVector//new float3(0,sights.TargetLocalVector.y,0)
+
                             ) - LocalToWorldLookup[entity].Position;
+                        //if (PlayerTagLookup.HasComponent(cameraControl.FollowedCharacterEntity))
+                        //{
+                        //    UnityEngine.Debug.Log(cameraControl.Look.y - sights.CachedLookInput.y);
+                        //}
+                        //sights.CachedLookInput.y = cameraControl.Look.y;
 
                         //if (hasSights)
                         //{
@@ -323,8 +339,10 @@ namespace ImaginaryReactor {
                         //{
                         //    orbitCamera.PitchAngle 
                         //}
+                       
 
-                        float aimAssist = sights.CurrentlyTracking;
+
+                        float aimAssist = sights.CurrentlyTracking>0.1f?1:0;
                         float2 targetInputForTracking = math.radians( sights.TrackingAngle);
                         if (aimAssist < 0.1f ||
                             math.lengthsq(sights.TrackingAngle) < 0.01f || math.abs( cameraControl.Look.x) < 0.01f ||
@@ -339,9 +357,12 @@ namespace ImaginaryReactor {
                             float x = cameraControl.Look.x * zoomMultiply;
                             float a = (targetInputForTracking.x /  orbitCamera.RotationSpeed);
                             aimAssist *= (x < a+0.5f&&x>a-0.5f) ? math.cos((x * math.PI * 2) - (a * math.PI * 2)) * 0.5f + 0.5f:0;
-                            
+
                             //if (PlayerTagLookup.HasComponent(cameraControl.FollowedCharacterEntity))
-                            //    UnityEngine.Debug.Log(x+" / "+a+" / "+aimAssist);
+                            //    UnityEngine.Debug.Log(x + " / " + a + " / " + aimAssist);
+
+                            //sights.TargetLocalVector.x += (a>0? a-x :x-a)*sights.TrackingOffset;
+
                             //float lookXAbs = math.abs(cameraControl.Look.x);
                             //float targetXAbs = math.abs(targetInputForTracking.x);
                             //if (lookXAbs < targetXAbs)
@@ -641,7 +662,7 @@ namespace ImaginaryReactor {
                     }
 
                     // Manually calculate the LocalToWorld since this is updating after the Transform systems, and the LtW is what rendering uses
-                    LocalToWorld cameraLocalToWorld = new LocalToWorld();
+                    //LocalToWorld cameraLocalToWorld = new LocalToWorld();
                     cameraLocalToWorld.Value = new float4x4(transform.Rotation, transform.Position);
                     LocalToWorldLookup[entity] = cameraLocalToWorld;
 

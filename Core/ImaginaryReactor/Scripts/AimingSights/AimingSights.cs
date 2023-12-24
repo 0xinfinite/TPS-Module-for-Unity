@@ -41,6 +41,7 @@ namespace ImaginaryReactor
         public float TrackingOffset;
         public float3 TargetVector;
         public float3 TargetLocalVector;
+        public float2 CachedLookInput;
         public float CurrentlyTracking;
         //[HideInInspector]
         //public quaternion RightShoulderViewOffset;

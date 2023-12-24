@@ -73,7 +73,7 @@ namespace ImaginaryReactor
 
                         var myPosition = targetCameraEntityLocalToWorld.Position;
 
-                        AimAssistHitsCollector collector = new AimAssistHitsCollector(entity, ignoredHitboxesBuffer, myPosition, AimingSights.ValueRW.CameraMovementDirection,
+                        AimAssistHitsCollector collector = new AimAssistHitsCollector(entity, ignoredHitboxesBuffer, rayStart, AimingSights.ValueRW.CameraMovementDirection,
                             BodyLookup, PhysicsWorld, AimingSights.ValueRW.ObstacleFilter);
 
                         if (PhysicsWorld.CastRay(trackingRay, ref collector))
@@ -140,18 +140,21 @@ namespace ImaginaryReactor
 
                                 var leadUp = leadingForward.y * math.PI * 0.5f;//math.dot(leadingForward, new float3(0, 1, 0));
                                 var leadRight = leadingForward.x* math.PI * 0.5f;// math.dot(leadingForward, new float3(1, 0, 0));
-
+                                //UnityEngine.Debug.Log("Lead Right : " + leadRight);
                                 AimingSights.ValueRW.TargetVector = //new float3(
                                     targetPosition;//+ new float3(0, 0.75f, 0);
                                 if(AimingSights.ValueRW.CurrentlyTracking < 0.5f)
                                 {
                                     AimingSights.ValueRW.TargetLocalVector =
-                                        targetHit.Position - targetPosition;
-                                        //new float4x4(
-                                        //    quaternion.LookRotation(targetCameraEntityLocalToWorld.Forward//math.normalizesafe( toTargetVector)
-                                        //                            , math.up())
-                                        //    , targetPosition)
-                                        //.TransformPoint(targetHit.Position);
+                                        targetCameraEntityLocalToWorld.Value.InverseTransformPoint(targetPosition);
+
+                                   // UnityEngine.Debug.Log("Save Local Vector: " + AimingSights.ValueRW.TargetLocalVector);
+                                    //targetHit.Position - targetPosition;
+                                    //new float4x4(
+                                    //    quaternion.LookRotation(targetCameraEntityLocalToWorld.Forward//math.normalizesafe( toTargetVector)
+                                    //                            , math.up())
+                                    //    , targetPosition)
+                                    //.TransformPoint(targetHit.Position);
                                 }
 
                                 //   0//math.radians( (1 - math.sqrt(math.cos(leadRight * math.PI * 0.5f))) * 90f * (leadRight > 0 ? AimingSights.ValueRW.TrackingOffset : -1f))//*DeltaTime
@@ -164,11 +167,12 @@ namespace ImaginaryReactor
                                 AimingSights.ValueRW.TrackingAngle = new float2(
                                        //math.radians((1 - math.sqrt(math.cos(leadRight * math.PI * 0.5f))) * 90f * (leadRight > 0 ? AimingSights.ValueRW.TrackingOffset : -1f))//*DeltaTime
                                        // , math.radians((1 - math.sqrt(math.cos(leadUp * math.PI * 0.5f))) * 90f * (leadUp > 0 ? 1f : -1f))// * DeltaTime
-                                       math.degrees(math.asin(math.abs(leadRight)))* (leadRight>0?1:-1f) //* DeltaTime
+                                       math.degrees(math.asin(math.saturate(math.abs(leadRight))))* (leadRight>0?1:-1f) //* DeltaTime
                                        ,
-                                       math.degrees(math.asin(math.abs(leadUp))) * (leadUp > 0 ? 1 : -1f)  //* DeltaTime
+                                       math.degrees(math.asin(math.saturate(math.abs(leadUp)))) * (leadUp > 0 ? 1 : -1f)  //* DeltaTime
                                        );
-                                        //);
+                                //UnityEngine.Debug.Log("Tracking Angle X : " + AimingSights.ValueRW.TrackingAngle.x);
+                                //);
                                 //UnityEngine.Debug.Log(leadUp+" / "+ math.degrees(MathUtilities.DotRatioToAngleRadians(leadUp)) * (leadUp > 0 ? 1 : -1));
                                 //AimingSights.ValueRW.TrackingAngle = new float2( //right*-90, up*-90
                                 //    (1 - math.sqrt(math.cos(leadRight * math.PI * 0.5f))) * 90f * (leadRight > 0 ? 1f : -1f)
@@ -185,7 +189,7 @@ namespace ImaginaryReactor
 
                                 //AimingSights.ValueRW.TrackingAngle *= AimingSights.ValueRW.TrackingOffset;
                                 //AimingSights.ValueRW.TrackingAngle *= DeltaTime;
-                                AimingSights.ValueRW.CurrentlyTracking = 1;
+                                AimingSights.ValueRW.CurrentlyTracking =math.saturate( AimingSights.ValueRW.CurrentlyTracking + 0.3f);
                                 tracking = true;
                             }
                         }
@@ -198,6 +202,7 @@ namespace ImaginaryReactor
                     //AimingSights.ValueRW.TrackingAngle = 0;
                     AimingSights.ValueRW.CurrentlyTracking = 0;
                     AimingSights.ValueRW.TargetLocalVector = 0;
+                    AimingSights.ValueRW.CachedLookInput = 0;
                     AimingSights.ValueRW.
                         TargetVector//TargetPosition 
                         = 0;
