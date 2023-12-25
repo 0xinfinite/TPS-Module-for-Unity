@@ -21,6 +21,34 @@ namespace ImaginaryReactor
     //[UpdateBefore(typeof(PhysicsSimulationGroup))]
     public partial struct AimingSightsSystem : ISystem
     {
+        //public float3 ToEulerAngles(quaternion q)
+        //{
+        //    float3 angles;
+
+        //    // roll (x-axis rotation)
+        //    double sinr_cosp = 2 * (q.value.w * q.value.x + q.value.y * q.value.z);
+        //    double cosr_cosp = 1 - 2 * (q.value.x * q.value.x + q.value.y * q.value.y);
+        //    angles.x = (float)math.atan2(sinr_cosp, cosr_cosp);
+
+        //    // pitch (y-axis rotation)
+        //    double sinp = 2 * (q.value.w * q.value.y - q.value.z * q.value.x);
+        //    if (math.abs(sinp) >= 1)
+        //        angles.y = (float)CopySign(math.PI / 2, sinp); // use 90 degrees if out of range
+        //    else
+        //        angles.y = (float)math.asin(sinp);
+
+        //    // yaw (z-axis rotation)
+        //    double siny_cosp = 2 * (q.value.w * q.value.z + q.value.x * q.value.y);
+        //    double cosy_cosp = 1 - 2 * (q.value.y * q.value.y + q.value.z * q.value.z);
+        //    angles.z = (float)math.atan2(siny_cosp, cosy_cosp);
+
+        //    return angles;
+        //}
+
+        //private double CopySign(double a, double b)
+        //{
+        //    return math.abs(a) * math.sign(b);
+        //}
 
         public void OnCreate(ref SystemState state)
         {
@@ -71,7 +99,8 @@ namespace ImaginaryReactor
                             Filter = AimingSights.ValueRW.TrackingRayFilter
                         };
 
-                        var myPosition = targetCameraEntityLocalToWorld.Position;
+                        float3 myCameraPosition = targetCameraEntityLocalToWorld.Position;
+                        float3 myCharacterPosition = LocalToWorldLookup[entity].Position;
 
                         AimAssistHitsCollector collector = new AimAssistHitsCollector(entity, ignoredHitboxesBuffer, rayStart, AimingSights.ValueRW.CameraMovementDirection,
                             BodyLookup, PhysicsWorld, AimingSights.ValueRW.ObstacleFilter);
@@ -103,19 +132,30 @@ namespace ImaginaryReactor
                             {
                                 //AimingSights.ValueRW.TargetPosition = new float4(collector.TargetHit.Position , 1);
 
-                                var myVelocity = myBody.RelativeVelocity;
-                                var targetVelocity = BodyLookup[targetEntity].RelativeVelocity;
 
 
                                 //var myPosition = targetCameraEntityLocalToWorld.Position;//
-                                                                                         //LocalToWorldLookup[entity].Position;
-                                var targetPosition = LocalToWorldLookup[targetEntity].Position;
-                                //UnityEngine.Debug.Log(targetPosition);
-                                var myEstimatePosition = (myPosition + myVelocity);
-                                var toTargetVector = targetPosition - myPosition;
+                                //LocalToWorldLookup[entity].Position;
+                                var targetPosition = LocalToWorldLookup[targetEntity].Position+ (math.up() * 1f);
 
-                                var myMat = new float4x4(quaternion.LookRotation(math.normalizesafe(toTargetVector),
-                                    new float3(0, 1, 0)), myEstimatePosition);
+
+                                var myVelocity = //AimingSights.ValueRW.CurrentlyTracking > 0 ? 
+                                    //(myCharacterPosition - AimingSights.ValueRW.PrevMyPosition)/DeltaTime  : 0; //
+                                                                                                                myBody.RelativeVelocity;
+                                var targetVelocity =// AimingSights.ValueRW.CurrentlyTracking > 0 ?
+                                    //(targetPosition - AimingSights.ValueRW.PrevTargetPosition)/DeltaTime : 0;
+                                    BodyLookup[targetEntity].RelativeVelocity;
+
+                                //AimingSights.ValueRW.PrevMyPosition = myCharacterPosition;
+                                //AimingSights.ValueRW.PrevTargetPosition = targetPosition;
+
+                              //UnityEngine.Debug.Log(targetPosition);
+                              var myEstimatePosition = (myCameraPosition + myVelocity);
+                                var targetEstimatePosition = targetPosition + targetVelocity;
+                                var toTargetVector = targetEstimatePosition - myEstimatePosition;// - ; //targetPosition - myPosition;
+
+                                var myMat = new float4x4(quaternion.LookRotation(targetCameraEntityLocalToWorld.Forward,//math.normalizesafe(toTargetVector),
+                                    math.up()), myEstimatePosition);
                                 ////var targetMat = new float4x4(quaternion.LookRotation(math.normalizesafe(toTargetVector),
                                 ////    new float3(0, 1, 0)), targetPosition);
 
@@ -125,21 +165,54 @@ namespace ImaginaryReactor
                                     //myMat.InverseTransformRotation(quaternion.LookRotation( 
                                     //math.normalizesafe((targetPosition+targetVelocity)-myPosition), new float3(0,1,0)));
                                     myMat.InverseTransformRotation(quaternion.LookRotation(
-                                    math.normalizesafe((targetPosition + targetVelocity) - myEstimatePosition), new float3(0, 1, 0)));
-                                ////var negativeLead =
-                                ////    targetMat.InverseTransformRotation(
-                                ////        quaternion.LookRotation(
-                                ////        math.normalizesafe((myPosition + myVelocity)- targetPosition), new float3(0,1,0))
-                                ////        );
-                                ////targetLTW.Value.InverseTransformRotation(quaternion.LookRotation(
-                                ////math.normalizesafe((myPosition + myVelocity) - targetPosition), new float3(0,1,0))) ;
+                                    math.normalizesafe(toTargetVector)//(targetPosition + targetVelocity) - myEstimatePosition)
+                                    , math.up()//new float3(0, 1, 0)
+                                    ));
+                                //////var negativeLead =
+                                //////    targetMat.InverseTransformRotation(
+                                //////        quaternion.LookRotation(
+                                //////        math.normalizesafe((myPosition + myVelocity)- targetPosition), new float3(0,1,0))
+                                //////        );
+                                //////targetLTW.Value.InverseTransformRotation(quaternion.LookRotation(
+                                //////math.normalizesafe((myPosition + myVelocity) - targetPosition), new float3(0,1,0))) ;
 
-                                var leadingRotation = lead;//negativeLead;//
-                                                           //           math.mul(lead, /*math.inverse*/(negativeLead));
-                                var leadingForward = MathUtilities.GetForwardFromRotation(leadingRotation);//math.mul(leadingRotation, new float3(0, 0, 1));
+                                //var leadingRotation = lead;//negativeLead;//
+                                //                           //           math.mul(lead, /*math.inverse*/(negativeLead));
+                                //var leadingForward = MathUtilities.GetForwardFromRotation(leadingRotation);//math.mul(leadingRotation, new float3(0, 0, 1));
+                                //var leadingForward = math.normalizesafe( myMat.InverseTransformPoint(toTargetVector));
+                                var leadingForward = MathUtilities.GetForwardFromRotation(lead);
 
-                                var leadUp = leadingForward.y * math.PI * 0.5f;//math.dot(leadingForward, new float3(0, 1, 0));
-                                var leadRight = leadingForward.x* math.PI * 0.5f;// math.dot(leadingForward, new float3(1, 0, 0));
+                                var targetDistance = math.distance(rayStart, targetHit.Position);
+                                //var eular = ToEulerAngles(lead);
+                                var offsetByDistance = math.clamp(math.remap(AimingSights.ValueRW.TrackingOffsetVector.y, AimingSights.ValueRW.TrackingOffsetVector.x,
+                                    1, AimingSights.ValueRW.TrackingOffset, targetDistance), 1, AimingSights.ValueRW.TrackingOffset);
+
+                                var leadUp = math.clamp(math.remap(math.PI * -0.5f, math.PI * 0.5f, -90, 90,
+                                    ((math.asin(leadingForward.y)) * 2) / math.PI)
+                                    , -90*2* offsetByDistance, 90*2* offsetByDistance) * 2 * offsetByDistance// eular.y; //MathUtilities.AngleRadians(math.forward(), MathUtilities.ProjectOnPlane(leadingForward, math.right())) * leadingForward.y > 0 ? 1 : -1;
+                                //MathUtilities.AngleRadians( math.up(), math.normalizesafe(MathUtilities.ProjectOnPlane(leadingForward, math.right())) )
+                                //* leadingForward.y>0?1:-1 //leadingForward.y;// math.sqrt( math.sin(leadingForward.y*math.PI * 0.5f)) * leadingForward.y>0?1:-1; 
+                                //leadingForward.y * math.PI * 0.5f;
+                                //math.dot(leadingForward, math.up())
+                                ;
+                                //var quat = quaternion.LookRotation(math.left(), math.up());
+                                //var dot = math.dot(quat, quaternion.LookRotation(math.forward(), math.up()));
+                                //var dir = math.dot(quat, quaternion.LookRotation(math.right(), math.up()));
+                                var leadRight = math.clamp(math.remap(math.PI * -0.5f, math.PI*0.5f,-90,90,
+                                    ((math.asin(leadingForward.x))*2)/math.PI)
+                                    ,-90*2* offsetByDistance, 90*2* offsetByDistance) * 2 * offsetByDistance
+                                //math.dot(lead, quaternion.LookRotation(math.forward(), math.up()))
+
+                                //var horizontalDir = math.dot(lead, quaternion.LookRotation(math.right(), math.up()));
+                                //MathUtilities.AngleRadians(math.forward(), MathUtilities.ProjectOnPlane( leadingForward, math.up())) *leadingForward.x > 0 ? 1 : -1;
+                                //MathUtilities .AngleRadians(math.right(), math.normalizesafe( MathUtilities.ProjectOnPlane(leadingForward, math.up()))) 
+                                /// leadingForward.x > 0 ? math.PI*0.5f : math.PI * -0.5f  //leadingForward.x;//math.sqrt( math.sin(leadingForward.x * math.PI * 0.5f)) * leadingForward.x > 0 ? 1 : -1;
+                                //leadingForward.x* math.PI * 0.5f;
+                                //math.dot(leadingForward, math.right())
+                                ;
+                                //leadRight = leadRight + ()
+                                //leadRight = 1;
+
                                 //UnityEngine.Debug.Log("Lead Right : " + leadRight);
                                 AimingSights.ValueRW.TargetVector = //new float3(
                                     targetPosition;//+ new float3(0, 0.75f, 0);
@@ -164,13 +237,14 @@ namespace ImaginaryReactor
                                 //, 0 
                                 //);
                                 //UnityEngine.Debug.Log("lead right : "+math.degrees(math.asin(leadRight)));
-                                AimingSights.ValueRW.TrackingAngle = new float2(
+                                AimingSights.ValueRW.TrackingAngle = new float4(
                                        //math.radians((1 - math.sqrt(math.cos(leadRight * math.PI * 0.5f))) * 90f * (leadRight > 0 ? AimingSights.ValueRW.TrackingOffset : -1f))//*DeltaTime
                                        // , math.radians((1 - math.sqrt(math.cos(leadUp * math.PI * 0.5f))) * 90f * (leadUp > 0 ? 1f : -1f))// * DeltaTime
-                                       math.degrees(math.asin(math.saturate(math.abs(leadRight))))* (leadRight>0?1:-1f) //* DeltaTime
+                                       leadRight//math.degrees(math.asin(math.saturate(math.abs(leadRight))))* (leadRight>0?1:-1f) //* DeltaTime
                                        ,
-                                       math.degrees(math.asin(math.saturate(math.abs(leadUp)))) * (leadUp > 0 ? 1 : -1f)  //* DeltaTime
-                                       );
+                                       leadUp//math.degrees(math.asin(math.saturate(math.abs(leadUp)))) * (leadUp > 0 ? 1 : -1f)  //* DeltaTime
+                                       ,0 /*horizontalDir*/
+                                       ,0);
                                 //UnityEngine.Debug.Log("Tracking Angle X : " + AimingSights.ValueRW.TrackingAngle.x);
                                 //);
                                 //UnityEngine.Debug.Log(leadUp+" / "+ math.degrees(MathUtilities.DotRatioToAngleRadians(leadUp)) * (leadUp > 0 ? 1 : -1));

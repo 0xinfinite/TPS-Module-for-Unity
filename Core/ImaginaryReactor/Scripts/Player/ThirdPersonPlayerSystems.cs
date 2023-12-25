@@ -79,7 +79,10 @@ namespace ImaginaryReactor {
                     float ads = input.Jumper.ADS.ReadValue<float>();
                     playerInputs.ValueRW.CameraZoomInput = ads;
                     //UnityEngine.Debug.Log("ADS : "+ads);
-                    playerInputs.ValueRW.CameraLookInput = input.Jumper.Look.ReadValue<Vector2>();
+                    playerInputs.ValueRW.CameraLookInput = math.tan( 
+                        input.Jumper.Look.ReadValue<Vector2>()
+                        )/(math.PI*0.5f)
+                        ;
                         //* math.lerp(1,0.25f,ads) ;//new float2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
                     //playerInputs.ValueRW.CameraZoomInput = -Input.mouseScrollDelta.y;
                     float verticalDeadzone = 0.1f* (1-ads);

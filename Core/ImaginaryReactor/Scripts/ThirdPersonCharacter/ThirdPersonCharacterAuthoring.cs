@@ -26,6 +26,7 @@ namespace ImaginaryReactor
         public Vector3 VaultOffset = Vector3.zero;
         public float ClimbMaxHeight = 0.2f;
         public float TrackingOffset = 1.5f;
+        public Vector2 TrackingOffsetVector = new Vector2(1, 2);
 
         //public LayerMask layerMask;
         public PhysicsCategoryTags AimRayFilter;
@@ -56,7 +57,8 @@ namespace ImaginaryReactor
                     FirstPersonZoomOffset = quaternion.identity,
                     //LeftShoulderViewOffset = quaternion.identity,
                     //RightShoulderViewOffset = quaternion.identity
-                    TrackingOffset = authoring.TrackingOffset
+                    TrackingOffset = authoring.TrackingOffset,
+                    TrackingOffsetVector = authoring.TrackingOffsetVector
                     //, TrackingOffset = new float2(0.5f,0)
                 });
 

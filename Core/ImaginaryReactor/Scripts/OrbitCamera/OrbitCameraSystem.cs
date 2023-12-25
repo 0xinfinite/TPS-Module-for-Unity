@@ -167,6 +167,27 @@ namespace ImaginaryReactor {
 
                     // Rotation
                     {
+                        float zoomMultiply = math.remap(0, 1, 1, 0.25f, cameraControl.Zoom);
+
+                        float aimAssist = sights.CurrentlyTracking > 0.1f ? 1 : 0;
+                        float2 targetInputForTracking = 0;//math.radians(sights.TrackingAngle);
+                        if (aimAssist < 0.1f ||
+                            math.lengthsq(sights.TrackingAngle) < 0.01f || math.abs(cameraControl.Look.x) < 0.01f ||
+                            //((sights.TrackingAngle.y > 0 && pitchAngleChange < 0) || (sights.TrackingAngle.y < 0 && pitchAngleChange > 0)) ||
+                            ((sights.TrackingAngle.x > 0 && cameraControl.Look.x < 0) || (sights.TrackingAngle.x < 0 && cameraControl.Look.x > 0)))
+                        {
+                            //aimAssistStrength = 0;
+                            aimAssist = 0;
+                        }
+                        else
+                        {
+                            float x = cameraControl.Look.x * zoomMultiply;
+                            float a = (targetInputForTracking.x / orbitCamera.RotationSpeed);
+                            aimAssist *= (x < a + 0.5f && x > a - 0.5f) ? math.cos((x * math.PI * 2) - (a * math.PI * 2)) * 0.5f + 0.5f : 0;
+
+                        }
+                        //aimAssist = sights.CurrentlyTracking > 0 ? 1 : 0;
+
                         quaternion rot = quaternion.LookRotationSafe(orbitCamera.PlanarForward, targetEntityLocalToWorld.Up);
 
                         // Handle rotating the camera along with character's parent entity (moving platform)
@@ -175,24 +196,34 @@ namespace ImaginaryReactor {
                             KinematicCharacterUtilities.AddVariableRateRotationFromFixedRateRotation(ref rot, characterBody.RotationFromParent, DeltaTime, characterBody.LastPhysicsUpdateDeltaTime);
                             orbitCamera.PlanarForward = math.normalizesafe(MathUtilities.ProjectOnPlane(MathUtilities.GetForwardFromRotation(rot), targetEntityLocalToWorld.Up));
                         }
-                        float zoomMultiply = math.remap(0, 1, 1, 0.25f,  cameraControl.Zoom);
                         // Yaw
-                        float yawAngleChange = cameraControl.Look.x * zoomMultiply * orbitCamera.RotationSpeed;
-
+                        float yawAngleChange = cameraControl.Look.x * zoomMultiply * orbitCamera.RotationSpeed;     //0.5 -> turn 90 degrees per 1 second
+                        //var quat = quaternion.LookRotation(math.left(), math.up());
+                        //var dot = math.dot(quat, quaternion.LookRotation(math.forward(), math.up()));
+                        //var dir = math.dot(quat, quaternion.LookRotation(math.right(), math.up()));
+                        //if (PlayerTagLookup.HasComponent(cameraControl.FollowedCharacterEntity))
+                        //{ UnityEngine.Debug.Log(dir); }
+                        //yawAngleChange = math.lerp(yawAngleChange,
+                        //    //math.degrees(math.asin(math.clamp(sights.TrackingAngle.x , -1, 1)))*sights.TrackingOffset* DeltaTime 
+                        //    //math.degrees(math.acos(dot))*DeltaTime*dir>0.5f?1:-1 // 90 degrees turn per second
+                        //    math.degrees(math.asin(sights.TrackingAngle.x)) * DeltaTime// * sights.TrackingAngle.z > 0.5f ? 1 : -1
+                        //    , aimAssist
+                        //    );
+                        
                         if (sights.CurrentlyTracking > 0.1f && sights.CurrentlyTracking < 0.5f)
                         {
                             sights.CachedLookInput//.x
                                 = cameraControl.Look;//.x;
                         }
 
-                        float3 vectorToTarget = (sights.TargetVector 
-                            - cameraLocalToWorld.Up * sights.TargetLocalVector.y - cameraLocalToWorld.Right * sights.TargetLocalVector.x*0.5f
-                            + cameraLocalToWorld.Up * (cameraControl.Look.y - sights.CachedLookInput.y) * sights.TrackingOffset //* sights.CurrentlyTracking
-                            + cameraLocalToWorld.Right * (cameraControl.Look.x - sights.CachedLookInput.x)
-                            //sights.TargetLocalVector
-                            //sights.TargetLocalVector//new float3(0,sights.TargetLocalVector.y,0)
+                        //float3 vectorToTarget = (sights.TargetVector 
+                        //    - cameraLocalToWorld.Up * sights.TargetLocalVector.y - cameraLocalToWorld.Right * sights.TargetLocalVector.x*0.5f
+                        //    + cameraLocalToWorld.Up * (cameraControl.Look.y - sights.CachedLookInput.y) * sights.TrackingOffset //* sights.CurrentlyTracking
+                        //    + cameraLocalToWorld.Right * (cameraControl.Look.x - sights.CachedLookInput.x)
+                        //    //sights.TargetLocalVector
+                        //    //sights.TargetLocalVector//new float3(0,sights.TargetLocalVector.y,0)
 
-                            ) - LocalToWorldLookup[entity].Position;
+                        //    ) - LocalToWorldLookup[entity].Position;
                         //if (PlayerTagLookup.HasComponent(cameraControl.FollowedCharacterEntity))
                         //{
                         //    UnityEngine.Debug.Log(cameraControl.Look.y - sights.CachedLookInput.y);
@@ -253,7 +284,11 @@ namespace ImaginaryReactor {
                         //    //aimAssistStrength.x *= sights.CurrentlyTracking;
                         //}
 
-                        quaternion yawRotation = quaternion.Euler(targetEntityLocalToWorld.Up * math.radians(yawAngleChange));
+                        quaternion yawRotation = quaternion.Euler(targetEntityLocalToWorld.Up * math.radians(yawAngleChange));   //quaternion.Euler(targetEntityLocalToWorld.Up * math.radians(90*DeltaTime)); // turn 90 degrees per second
+
+                        quaternion yawRotationTracking = quaternion.Euler(targetEntityLocalToWorld.Up * math.radians(
+                           sights.TrackingAngle.x*DeltaTime //*0.5f//math.degrees(math.asin(sights.TrackingAngle.x))*DeltaTime
+                            ));
                         //if (hasSights & sights.CurrentlyTracking > 0)
                         //{
                         //    orbitCamera.PlanarForward = math.normalizesafe( MathUtilities.ProjectOnPlane((sights.TargetVector- LocalToWorldLookup[entity].Position
@@ -261,9 +296,9 @@ namespace ImaginaryReactor {
                         //}
                         //else
                         //{
-                            orbitCamera.PlanarForward = math.normalizesafe(
+                        orbitCamera.PlanarForward = math.normalizesafe(
                                 //math.lerp(
-                                    math.rotate(yawRotation, orbitCamera.PlanarForward)//,
+                                    math.rotate(math.slerp( yawRotation, yawRotationTracking, aimAssist), orbitCamera.PlanarForward)//,
                                 //math.normalizesafe(MathUtilities.ProjectOnPlane(vectorToTarget, new float3(0, 1, 0)))
                                 //, aimAssistStrength.x)
                                 );
@@ -271,6 +306,11 @@ namespace ImaginaryReactor {
 
                         // Pitch
                         float pitchAngleChange = cameraControl.Look.y * zoomMultiply * orbitCamera.RotationSpeed;
+
+                        //pitchAngleChange = math.lerp(
+                        //    pitchAngleChange,
+                        //    math.degrees(math.asin(math.clamp(sights.TrackingAngle.y, -1, 1))) * sights.TrackingOffset * DeltaTime,
+                        //    aimAssist*0.9f);
                         //if (hasSights)
                         //{
                         //    pitchAngleChange += sights.TargetVector.y * sights.TargetVector.w;
@@ -325,7 +365,7 @@ namespace ImaginaryReactor {
                         //}
                         //aimAssistStrength *= 0.5f;
 
-                        orbitCamera.PitchAngle += -pitchAngleChange;
+                        //orbitCamera.PitchAngle += -pitchAngleChange;
                         //if(hasSights)
                         //{
                         //    orbitCamera.PitchAngle += sights.TrackingAngle.y * sights.TrackingOffset * DeltaTime;
@@ -339,41 +379,9 @@ namespace ImaginaryReactor {
                         //{
                         //    orbitCamera.PitchAngle 
                         //}
-                       
 
 
-                        float aimAssist = sights.CurrentlyTracking>0.1f?1:0;
-                        float2 targetInputForTracking = math.radians( sights.TrackingAngle);
-                        if (aimAssist < 0.1f ||
-                            math.lengthsq(sights.TrackingAngle) < 0.01f || math.abs( cameraControl.Look.x) < 0.01f ||
-                            //((sights.TrackingAngle.y > 0 && pitchAngleChange < 0) || (sights.TrackingAngle.y < 0 && pitchAngleChange > 0)) ||
-                            ((sights.TrackingAngle.x > 0 && yawAngleChange < 0) || (sights.TrackingAngle.x < 0 && yawAngleChange > 0)))
-                        {
-                            //aimAssistStrength = 0;
-                            aimAssist = 0;
-                        }
-                        else
-                        {
-                            float x = cameraControl.Look.x * zoomMultiply;
-                            float a = (targetInputForTracking.x /  orbitCamera.RotationSpeed);
-                            aimAssist *= (x < a+0.5f&&x>a-0.5f) ? math.cos((x * math.PI * 2) - (a * math.PI * 2)) * 0.5f + 0.5f:0;
 
-                            //if (PlayerTagLookup.HasComponent(cameraControl.FollowedCharacterEntity))
-                            //    UnityEngine.Debug.Log(x + " / " + a + " / " + aimAssist);
-
-                            //sights.TargetLocalVector.x += (a>0? a-x :x-a)*sights.TrackingOffset;
-
-                            //float lookXAbs = math.abs(cameraControl.Look.x);
-                            //float targetXAbs = math.abs(targetInputForTracking.x);
-                            //if (lookXAbs < targetXAbs)
-                            //{
-                            //    aimAssist *= math.saturate(math.remap(0, targetXAbs, 0, 1, lookXAbs));
-                            //}
-                            //else
-                            //{
-                            //    aimAssist *= math.saturate(math.remap(targetXAbs, 1, 1, 0, lookXAbs));
-                            //}
-                        }
                         //aimAssist *= aimAssistStrength.x;
 
                         //aimAssist = math.saturate(aimAssist);
@@ -382,32 +390,37 @@ namespace ImaginaryReactor {
                         //aimAssistStrength *= math.remap( 0,orbitCamera.RotationSpeed,1,0,
                         //    math.distance(new float2(yawAngleChange, pitchAngleChange) ,sights.TrackingAngle ));
 
-
+                        orbitCamera.PitchAngle = math.lerp(orbitCamera.PitchAngle - pitchAngleChange, orbitCamera.PitchAngle - sights.TrackingAngle.y*DeltaTime, aimAssist);
                         orbitCamera.PitchAngle = math.clamp(orbitCamera.PitchAngle, orbitCamera.MinVAngle, orbitCamera.MaxVAngle);
                         quaternion pitchRotation = quaternion.Euler(math.right() * 
                              math.radians(orbitCamera.PitchAngle)
                             );
+                        //quaternion pitchRotationForTracking = quaternion.Euler(math.right() *
+                        //     math.radians(orbitCamera.PitchAngle)
+                        //    );
+
+                        //pitchRotation = math.slerp(pitchRotation, pitchRotationForTracking, aimAssist);
 
                                                 // Final rotation
                         rot = quaternion.LookRotationSafe(orbitCamera.PlanarForward, targetEntityLocalToWorld.Up);
 
-                        float3 directionToTarget = math.normalizesafe(vectorToTarget);
+                        //float3 directionToTarget = math.normalizesafe(vectorToTarget);
                         orbitCamera.ThirdPersonRotation =
-                            math.nlerp(
-                            math.mul(rot, pitchRotation),
+                            //math.nlerp(
+                            math.mul(rot, pitchRotation);//,
                             
-                               quaternion.LookRotationSafe(directionToTarget, directionToTarget.y>0.99? -orbitCamera.PlanarForward : math.up()
-                               ) //math.normalizesafe(MathUtilities.ProjectOnPlane(vectorToTarget, new float3(0, 1, 0)))
+                            //   quaternion.LookRotationSafe(directionToTarget, directionToTarget.y>0.99? -orbitCamera.PlanarForward : math.up()
+                            //   ) //math.normalizesafe(MathUtilities.ProjectOnPlane(vectorToTarget, new float3(0, 1, 0)))
                             
-                            ,
-                            aimAssist//math.saturate( math.length(aimAssistStrength )) 
-                            );
+                            //,
+                            //aimAssist//math.saturate( math.length(aimAssistStrength )) 
+                            //);
                         //if (PlayerTagLookup.HasComponent(cameraControl.FollowedCharacterEntity))
                         //    UnityEngine.Debug.Log(aimAssist);
 
                         orbitCamera.PlanarForward = math.normalizesafe(MathUtilities.ProjectOnPlane(MathUtilities.GetForwardFromRotation(orbitCamera.ThirdPersonRotation), targetEntityLocalToWorld.Up));
                         float upDot = MathUtilities.GetForwardFromRotation(orbitCamera.ThirdPersonRotation).y;
-                        orbitCamera.PitchAngle = math.degrees(math.asin(math.abs(upDot)));  // math.degrees( MathUtilities.DotRatioToAngleRadians(math.dot(orbitCamera.PlanarForward,math.up())));
+                        orbitCamera.PitchAngle = math.degrees( math.asin(math.clamp(-upDot, -1, 1)));  // math.degrees( MathUtilities.DotRatioToAngleRadians(math.dot(orbitCamera.PlanarForward,math.up())));
 
                         //float upDot = MathUtilities.GetForwardFromRotation(orbitCamera.ThirdPersonRotation).y;//math.dot(MathUtilities.GetForwardFromRotation(orbitCamera.ThirdPersonRotation), math.up());
                         //UnityEngine.Debug.Log("Pitch Angle : " +// math.sqrt(

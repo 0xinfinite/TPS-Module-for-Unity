@@ -45,7 +45,7 @@ namespace ImaginaryReactor
 
                     manager.SetBool(mc.ID, "Vault", isValuting);
 
-                    for (int i = 0; manager.clearBodyQueue.Count > 0 && i < manager.clearBodyQueue.Count;)
+                    for (int i = 0; /*manager.clearBodyQueue.Count > 0 &&*/ i < manager.clearBodyQueue.Count;)
                     {
                         int clearRequestId = manager.clearBodyQueue.Peek();
 

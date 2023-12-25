@@ -37,11 +37,15 @@ namespace ImaginaryReactor
         public float3 LaserPointerPosition;
         //[HideInInspector]
         public float3 CameraMovementDirection;
-        public float2 TrackingAngle;
+        public float4 TrackingAngle;
         public float TrackingOffset;
+        public float2 TrackingOffsetVector;
+        public float3 PrevMyPosition;
+        public float3 PrevTargetPosition;
         public float3 TargetVector;
         public float3 TargetLocalVector;
         public float2 CachedLookInput;
+        public float4x4 TrackingMatrix;
         public float CurrentlyTracking;
         //[HideInInspector]
         //public quaternion RightShoulderViewOffset;
