@@ -79,11 +79,22 @@ namespace ImaginaryReactor {
                     float ads = input.Jumper.ADS.ReadValue<float>();
                     playerInputs.ValueRW.CameraZoomInput = ads;
                     //UnityEngine.Debug.Log("ADS : "+ads);
-                    playerInputs.ValueRW.CameraLookInput = math.tan( 
+                    float2 padInput = math.tan(
                         input.Jumper.Look.ReadValue<Vector2>()
-                        )/(math.PI*0.5f)
+                        ) / (math.PI * 0.5f)
                         ;
-                        //* math.lerp(1,0.25f,ads) ;//new float2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+                    float2 mouseInput = input.Jumper.MouseLook.ReadValue<Vector2>();
+                    playerInputs.ValueRW.CameraLookInput = padInput;
+                    bool isXInputMouse = math.abs(padInput.x) < math.abs(mouseInput.x);
+                    bool isYInputMouse = math.abs(padInput.y) < math.abs(mouseInput.y);
+                    playerInputs.ValueRW.CameraLookInput = new float2(isXInputMouse ? mouseInput.x : padInput.x,
+                        isYInputMouse ? mouseInput.y : padInput.y
+                        );
+                    playerInputs.ValueRW.IsMouseInput = isXInputMouse || isYInputMouse;
+
+                    //playerInputs.ValueRW.CameraLookInput.x = (1 - math.sqrt(math.cos(playerInputs.ValueRW.CameraLookInput.x * math.PI * 0.5f))) * playerInputs.ValueRW.CameraLookInput.x > 0 ? 1 : -1;
+                    //playerInputs.ValueRW.CameraLookInput.y = (1 - math.sqrt(math.cos(playerInputs.ValueRW.CameraLookInput.y * math.PI * 0.5f))) * playerInputs.ValueRW.CameraLookInput.y > 0 ? 1 : -1;
+                    //* math.lerp(1,0.25f,ads) ;//new float2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
                     //playerInputs.ValueRW.CameraZoomInput = -Input.mouseScrollDelta.y;
                     float verticalDeadzone = 0.1f* (1-ads);
                     playerInputs.ValueRW.CameraLookInput.y =
@@ -205,6 +216,7 @@ namespace ImaginaryReactor {
                         //cameraControl.Zoom > 0.9999f ? (playerInputs.CameraZoomInput < 0.9999f?true:false) : false
                         //    ;
                 cameraControl.Zoom = playerInputs.CameraZoomInput;
+                    cameraControl.IsMouseInput = playerInputs.IsMouseInput;
 
                     cameraControl.SwitchView = playerInputs.SwitchViewPressed.IsSet(tick);
 

@@ -197,10 +197,10 @@ namespace ImaginaryReactor
 
                     if (/*characterControl.LastJumpPressedTime < 10 &&*/ characterControl.Jump)//characterControl.Jump)
                     {
-                        //CharacterControlUtilities.StandardJump(ref characterBody, 
-                        //   math.normalizesafe(characterComponent.WallNormal / math.max(characterComponent.ContactCount, 1)) * characterComponent.WallJumpSpeed ,
-                        //    true, characterComponent.WallNormal //characterBody.GroundingUp
-                        //    );
+                        CharacterControlUtilities.StandardJump(ref characterBody,
+                           characterBody.GroundingUp * characterComponent.WallJumpSpeed,
+                            false, characterBody.GroundingUp
+                            );
                         Jumping(true, ref characterBody,  characterComponent.WallJumpSpeed / math.max(characterComponent.ContactCount, 1), /*characterControl.MoveVector*/
                            math.lengthsq(characterControl.MoveVector) > 0.1f ?
                            math.normalizesafe(math.reflect(characterControl.MoveVector, characterComponent.WallNormal) + characterBody.GroundingUp) :

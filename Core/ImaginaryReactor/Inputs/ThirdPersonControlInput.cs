@@ -48,6 +48,15 @@ namespace ImaginaryReactor
                     ""initialStateCheck"": true
                 },
                 {
+                    ""name"": ""MouseLook"",
+                    ""type"": ""Value"",
+                    ""id"": ""56f407c9-ab87-445d-9c3e-511f19e26bb6"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
                     ""name"": ""Fire"",
                     ""type"": ""Value"",
                     ""id"": ""a121b7a2-ee56-4373-9b76-fc86b068ba38"",
@@ -99,11 +108,66 @@ namespace ImaginaryReactor
                     ""id"": ""a1f7aef7-08db-4c9d-b193-2aadce097a0d"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
-                    ""processors"": """",
+                    ""processors"": ""StickDeadzone(min=0.15)"",
                     ""groups"": """",
                     ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""Keyboard"",
+                    ""id"": ""88592542-44d1-4eeb-8383-5f6226dd7d1b"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""085157d5-4d8c-4de0-9604-b232855d7158"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""d8b9e32a-a1b5-4019-a2cf-e73b72acd7d9"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""17cfe6ad-28ac-4511-9278-90a707656294"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""8eaba094-f7d5-48f6-bd19-e14cb3e856da"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": """",
@@ -129,6 +193,17 @@ namespace ImaginaryReactor
                 },
                 {
                     ""name"": """",
+                    ""id"": ""60f73b9c-4fbb-4407-8252-a053e7ebe3d5"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Fire"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""d6b76961-044b-453d-b7da-c0440f5659fb"",
                     ""path"": ""<Gamepad>/leftTrigger"",
                     ""interactions"": ""Hold(duration=0.002,pressPoint=0.001)"",
@@ -140,8 +215,30 @@ namespace ImaginaryReactor
                 },
                 {
                     ""name"": """",
+                    ""id"": ""1590aaac-8f4d-49dd-8d90-35bfe5f85765"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ADS"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""3e003992-949f-483f-8ba1-fc8e8d608dad"",
                     ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Jump"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""753c8136-5a99-4f1f-8a4d-21b5b1976433"",
+                    ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -162,12 +259,45 @@ namespace ImaginaryReactor
                 },
                 {
                     ""name"": """",
+                    ""id"": ""3bb3c6ba-9c49-4bd6-905b-0d8450ddd5b8"",
+                    ""path"": ""<Mouse>/middleButton"",
+                    ""interactions"": ""Press(pressPoint=0.001,behavior=1)"",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ThrowRelease"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""30cff7c1-01d0-4a2f-9dde-ac9871d7a440"",
                     ""path"": ""<Gamepad>/rightStickPress"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""SwitchView"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""430752e8-3c13-43f2-8cdc-a4fb027f5b8e"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SwitchView"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""922d6c5f-d74b-44ce-b79b-6092e9e59c5c"",
+                    ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": ""ScaleVector2(x=0.1,y=0.1)"",
+                    ""groups"": """",
+                    ""action"": ""MouseLook"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -180,6 +310,7 @@ namespace ImaginaryReactor
             m_Jumper = asset.FindActionMap("Jumper", throwIfNotFound: true);
             m_Jumper_Move = m_Jumper.FindAction("Move", throwIfNotFound: true);
             m_Jumper_Look = m_Jumper.FindAction("Look", throwIfNotFound: true);
+            m_Jumper_MouseLook = m_Jumper.FindAction("MouseLook", throwIfNotFound: true);
             m_Jumper_Fire = m_Jumper.FindAction("Fire", throwIfNotFound: true);
             m_Jumper_ADS = m_Jumper.FindAction("ADS", throwIfNotFound: true);
             m_Jumper_Jump = m_Jumper.FindAction("Jump", throwIfNotFound: true);
@@ -248,6 +379,7 @@ namespace ImaginaryReactor
         private List<IJumperActions> m_JumperActionsCallbackInterfaces = new List<IJumperActions>();
         private readonly InputAction m_Jumper_Move;
         private readonly InputAction m_Jumper_Look;
+        private readonly InputAction m_Jumper_MouseLook;
         private readonly InputAction m_Jumper_Fire;
         private readonly InputAction m_Jumper_ADS;
         private readonly InputAction m_Jumper_Jump;
@@ -259,6 +391,7 @@ namespace ImaginaryReactor
             public JumperActions(@ThirdPersonControlInput wrapper) { m_Wrapper = wrapper; }
             public InputAction @Move => m_Wrapper.m_Jumper_Move;
             public InputAction @Look => m_Wrapper.m_Jumper_Look;
+            public InputAction @MouseLook => m_Wrapper.m_Jumper_MouseLook;
             public InputAction @Fire => m_Wrapper.m_Jumper_Fire;
             public InputAction @ADS => m_Wrapper.m_Jumper_ADS;
             public InputAction @Jump => m_Wrapper.m_Jumper_Jump;
@@ -279,6 +412,9 @@ namespace ImaginaryReactor
                 @Look.started += instance.OnLook;
                 @Look.performed += instance.OnLook;
                 @Look.canceled += instance.OnLook;
+                @MouseLook.started += instance.OnMouseLook;
+                @MouseLook.performed += instance.OnMouseLook;
+                @MouseLook.canceled += instance.OnMouseLook;
                 @Fire.started += instance.OnFire;
                 @Fire.performed += instance.OnFire;
                 @Fire.canceled += instance.OnFire;
@@ -304,6 +440,9 @@ namespace ImaginaryReactor
                 @Look.started -= instance.OnLook;
                 @Look.performed -= instance.OnLook;
                 @Look.canceled -= instance.OnLook;
+                @MouseLook.started -= instance.OnMouseLook;
+                @MouseLook.performed -= instance.OnMouseLook;
+                @MouseLook.canceled -= instance.OnMouseLook;
                 @Fire.started -= instance.OnFire;
                 @Fire.performed -= instance.OnFire;
                 @Fire.canceled -= instance.OnFire;
@@ -340,6 +479,7 @@ namespace ImaginaryReactor
         {
             void OnMove(InputAction.CallbackContext context);
             void OnLook(InputAction.CallbackContext context);
+            void OnMouseLook(InputAction.CallbackContext context);
             void OnFire(InputAction.CallbackContext context);
             void OnADS(InputAction.CallbackContext context);
             void OnJump(InputAction.CallbackContext context);

@@ -79,6 +79,7 @@ namespace ImaginaryReactor
     {
         public Entity FollowedCharacterEntity;
         public float2 Look;
+        public bool IsMouseInput;
         public float Zoom;
         public bool ToggleZoom;
         public bool SwitchView;

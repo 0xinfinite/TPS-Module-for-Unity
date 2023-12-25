@@ -298,7 +298,7 @@ namespace ImaginaryReactor {
                         //{
                         orbitCamera.PlanarForward = math.normalizesafe(
                                 //math.lerp(
-                                    math.rotate(math.slerp( yawRotation, yawRotationTracking, aimAssist), orbitCamera.PlanarForward)//,
+                                    math.rotate(math.slerp( yawRotation, yawRotationTracking, aimAssist * (cameraControl.IsMouseInput?0:1)), orbitCamera.PlanarForward)//,
                                 //math.normalizesafe(MathUtilities.ProjectOnPlane(vectorToTarget, new float3(0, 1, 0)))
                                 //, aimAssistStrength.x)
                                 );
@@ -390,7 +390,7 @@ namespace ImaginaryReactor {
                         //aimAssistStrength *= math.remap( 0,orbitCamera.RotationSpeed,1,0,
                         //    math.distance(new float2(yawAngleChange, pitchAngleChange) ,sights.TrackingAngle ));
 
-                        orbitCamera.PitchAngle = math.lerp(orbitCamera.PitchAngle - pitchAngleChange, orbitCamera.PitchAngle - sights.TrackingAngle.y*DeltaTime, aimAssist);
+                        orbitCamera.PitchAngle = math.lerp(orbitCamera.PitchAngle - pitchAngleChange, orbitCamera.PitchAngle - sights.TrackingAngle.y*DeltaTime, aimAssist * (cameraControl.IsMouseInput ? 0 : 1));
                         orbitCamera.PitchAngle = math.clamp(orbitCamera.PitchAngle, orbitCamera.MinVAngle, orbitCamera.MaxVAngle);
                         quaternion pitchRotation = quaternion.Euler(math.right() * 
                              math.radians(orbitCamera.PitchAngle)

@@ -19,6 +19,7 @@ namespace ImaginaryReactor
     {
         public float2 MoveInput;
         public float2 CameraLookInput;
+        public bool IsMouseInput;
         public float CameraZoomInput;
         public FixedInputEvent JumpPressed;
         public float FloatingInput;
